@@ -43,7 +43,6 @@ module.exports = (robot) ->
 
   getBuildType = (msg, type, callback) ->
     url = "#{base_url}/httpAuth/app/rest/buildTypes/#{type}"
-    console.log "sending request to #{url}"
     msg.http(url)
       .headers(getAuthHeader())
       .get() (err, res, body) ->
@@ -96,7 +95,7 @@ module.exports = (robot) ->
       .query(locator: ["count:#{amount}","running:any"].join(","))
       .get() (err, res, body) ->
         err = body unless res.statusCode == 200
-        builds = JSON.parse(body).build.splice(amount) unless err
+        builds = JSON.parse(body).build.splice(0, amount) unless err
         callback err, msg, builds
 
   mapNameToIdForBuildType = (msg, project, name, callback) ->
@@ -115,7 +114,7 @@ module.exports = (robot) ->
     getBuildTypes msg, project, (err, msg, buildTypes) ->
       callback msg, execute(buildTypes)
 
-  mapBuildToNameList = (build) ->
+  mapBuildToNameList = (build) -> 
     id = build['buildTypeId']
     msg = build['messengerBot']
     url = "http://#{hostname}/httpAuth/app/rest/buildTypes/id:#{id}"
@@ -240,7 +239,7 @@ module.exports = (robot) ->
             amount = parseInt(buildTypeMatches[2])
             project = null
           else
-            amount = 5
+            amount = 1
             buildTypeRE = /^\s*of (.*?) of (.*)/i
 
             buildTypeMatches = option.match buildTypeRE

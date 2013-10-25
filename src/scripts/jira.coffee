@@ -17,11 +17,11 @@
 # Commands:
 #   <Project Key>-<Issue ID> - Displays information about the JIRA ticket (if it exists)
 #   hubot show watchers for <Issue Key> - Shows watchers for the given JIRA issue
+#   hubot show comments for <Issue Key> - Shows the comments for the given JIRA issue
+#   hubot show openissues for <Issue Key> - Shows the open issues for the given JQL
+#   e.g. hubot show openissues for project = "The Cornered Badgers" AND fixVersion = "13.21"
 #   hubot search for <JQL> - Search JIRA with JQL
-#   hubot save filter <JQL> as <name> - Save JIRA JQL query as filter in the brain
-#   hubot use filter <name> - Use a JIRA filter from the brain
-#   hubot show filter(s) - Show all JIRA filters
-#   hubot show filter <name> - Show a specific JIRA filter
+#   e.g. hubot search for project = "The Cornered Badgers" AND component = "Consumer Web"
 #
 # Author:
 #   codec
@@ -117,57 +117,70 @@ module.exports = (robot) ->
 
       cb watchers.watchers.map((watcher) -> return watcher.displayName).join(", ")
 
+  comments = (msg, issue, cb) ->
+    get msg, "issue/#{issue}/comment", (comments) ->
+      if comments.errors?
+        return 
+
+      cb comments.comments.map((comment) -> return comment.body)
+
   info = (msg, issue, cb) ->
     get msg, "issue/#{issue}", (issues) ->
       if issues.errors?
         return
 
-      if useV2
-        issue =
-          key: issues.key
-          summary: issues.fields.summary
-          assignee: ->
-            if issues.fields.assignee != null
-              issues.fields.assignee.displayName
-            else
-              "no assignee"
-          status: issues.fields.status.name
-          fixVersion: ->
-            if issues.fields.fixVersions? and issues.fields.fixVersions.length > 0
-              issues.fields.fixVersions.map((fixVersion) -> return fixVersion.name).join(", ")
-            else
-              "no fix version"
-          url: process.env.HUBOT_JIRA_URL + '/browse/' + issues.key
-      else
-        issue =
-          key: issues.key
-          summary: issues.fields.summary.value
-          assignee: ->
-            if issues.fields.assignee.value != undefined
-              issues.fields.assignee.value.displayName
-            else
-              "no assignee"
-          status: issues.fields.status.value.name
-          fixVersion: ->
-            if issues.fields.fixVersions? and issues.fields.fixVersions.value != undefined
-              issues.fields.fixVersions.value.map((fixVersion) -> return fixVersion.name).join(", ")
-            else
-              "no fix version"
-          url: process.env.HUBOT_JIRA_URL + '/browse/' + issues.key
+      issue =
+        key: issues.key
+        summary: issues.fields.summary
+        project: issues.fields.project.name
+        assignee: ->
+          if issues.fields.assignee != null
+            issues.fields.assignee.displayName
+          else
+            "no assignee"
+        status: issues.fields.status.name
+        fixVersion: ->
+          if issues.fields.fixVersions? and issues.fields.fixVersions.length > 0
+            issues.fields.fixVersions.map((fixVersion) -> return fixVersion.name).join(", ")
+          else
+            "no fix version" 
+        customfield_12000: issues.fields.customfield_12000
+        components: -> 
+          if issues.fields.components? and issues.fields.components.length > 0
+            issues.fields.components.map((component) -> return component.name).join(", ")
+          else
+            "no components" 
+        url: process.env.HUBOT_JIRA_URL + '/browse/' + issues.key
 
-      cb "[#{issue.key}] #{issue.summary}. #{issue.assignee()} / #{issue.status}, #{issue.fixVersion()} #{issue.url}"
+      
+      result_text = "[#{issue.key}] #{issue.summary} \nProject: #{issue.project} \nAssignee: #{issue.assignee()} \nFixVersion: #{issue.fixVersion()} \nCurrent Status: #{issue.status} \nComponents: #{issue.components()} \nBusiness Value: \n#{issue.customfield_12000}"
+      
+      cb result_text
       
   search = (msg, jql, cb) ->
     get msg, "search/?jql=#{escape(jql)}", (result) ->
       if result.errors?
         return
       
-      resultText = "I found #{result.total} issues for your search. #{process.env.HUBOT_JIRA_URL}/secure/IssueNavigator.jspa?reset=true&jqlQuery=#{escape(jql)}"
+      resultText = "I found #{result.total} issues for your search."
       if result.issues.length <= maxlist
         cb resultText
         result.issues.forEach (issue) ->
           info msg, issue.key, (info) ->
             cb info
+      else
+        cb resultText + " (too many to list)"
+
+  openIssues = (msg, jql, cb) ->
+    get msg, "search/?jql=#{escape(jql)}AND%20status%20%21%3D%20%22Signed%20Off%22", (result) ->
+      if result.errors?
+        return
+
+      resultText = "I found #{result.total} issues for your search."
+      if result.issues.length <= maxlist
+        cb resultText
+        result.issues.forEach (issue) ->
+          cb issue.key + ": " + issue.fields.summary
       else
         cb resultText + " (too many to list)"
 
@@ -177,12 +190,26 @@ module.exports = (robot) ->
 
     watchers msg, msg.match[3], (text) ->
       msg.send text
+
+  robot.respond /(show )?comments (for )?(\w+-[0-9]+)/i, (msg) ->
+    if msg.message.user.id is robot.name
+      return
+
+    comments msg, msg.match[3], (text) ->
+      msg.send text
   
   robot.respond /search (for )?(.*)/i, (msg) ->
     if msg.message.user.id is robot.name
       return
       
     search msg, msg.match[2], (text) ->
+      msg.reply text
+
+  robot.respond /show (openissues for )?(.*)/i, (msg) ->
+    if msg.message.user.id is robot.name
+      return
+
+    openIssues msg, msg.match[2], (text) ->
       msg.reply text
   
   robot.respond /([^\w\-]|^)(\w+-[0-9]+)(?=[^\w]|$)/ig, (msg) ->
@@ -200,39 +227,4 @@ module.exports = (robot) ->
           msg.send text
         recentissues.add msg.message.user.room+ticket
 
-  robot.respond /save filter (.*) as (.*)/i, (msg) ->
-    filter = filters.get msg.match[2]
 
-    if filter
-      filters.delete filter.name
-      msg.reply "Updated filter #{filter.name} for you"
-
-    filter = new IssueFilter msg.match[2], msg.match[1]
-    filters.add filter
-
-  robot.respond /delete filter (.*)/i, (msg) ->
-    filters.delete msg.match[1]
-
-  robot.respond /(use )?filter (.*)/i, (msg) ->
-    name    = msg.match[2]
-    filter  = filters.get name
-    
-    if not filter
-      msg.reply "Sorry, could not find filter #{name}"
-      return
-
-    search msg, filter.jql, (text) ->
-      msg.reply text
-
-  robot.respond /(show )?filter(s)? ?(.*)?/i, (msg) ->
-    if filters.all().length == 0
-      msg.reply "Sorry, I don't remember any filters."
-      return
-
-    if msg.match[3] == undefined
-      msg.reply "I remember #{filters.all().length} filters"
-      filters.all().forEach (filter) ->
-        msg.reply "#{filter.name}: #{filter.jql}"
-    else
-      filter = filters.get msg.match[3]
-      msg.reply "#{filter.name}: #{filter.jql}"
