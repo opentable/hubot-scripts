@@ -18,7 +18,10 @@
 #   <Project Key>-<Issue ID> - Displays information about the JIRA ticket (if it exists)
 #   hubot show watchers for <Issue Key> - Shows watchers for the given JIRA issue
 #   hubot show comments for <Issue Key> - Shows the comments for the given JIRA issue
+
 #   hubot show open issues for <Issue Key> - Shows the open issues for the given JQL
+#   e.g. hubot show open issues for project = "The Cornered Badgers" AND fixVersion = "13.21"
+
 #   hubot search for <JQL> - Search JIRA with JQL
 #   hubot save filter <JQL> as <name> - Save JIRA JQL query as filter in the brain
 #   hubot use filter <name> - Use a JIRA filter from the brain
