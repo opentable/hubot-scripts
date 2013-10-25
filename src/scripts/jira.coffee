@@ -163,7 +163,7 @@ module.exports = (robot) ->
       if result.errors?
         return
       
-      resultText = "I found #{result.total} issues for your search. #{process.env.HUBOT_JIRA_URL}/secure/IssueNavigator.jspa?reset=true&jqlQuery=#{escape(jql)}"
+      resultText = "I found #{result.total} issues for your search."
       if result.issues.length <= maxlist
         cb resultText
         result.issues.forEach (issue) ->
