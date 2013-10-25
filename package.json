@@ -26,6 +26,8 @@
   },
 
   "dependencies": {
-    "redis": "0.8.4"
+    "redis": "0.8.4",
+    "underscore" : "1.5.2",
+    "gitio": "1.0.1"
   }
 }
