@@ -18,6 +18,7 @@
 #   <Project Key>-<Issue ID> - Displays information about the JIRA ticket (if it exists)
 #   hubot show watchers for <Issue Key> - Shows watchers for the given JIRA issue
 #   hubot show comments for <Issue Key> - Shows the comments for the given JIRA issue
+#   hubot show open issues for <Issue Key> - Shows the open issues for the given JQL
 #   hubot search for <JQL> - Search JIRA with JQL
 #   hubot save filter <JQL> as <name> - Save JIRA JQL query as filter in the brain
 #   hubot use filter <name> - Use a JIRA filter from the brain
@@ -172,6 +173,19 @@ module.exports = (robot) ->
       else
         cb resultText + " (too many to list)"
 
+  openIssues = (msg, jql, cb) ->
+    get msg, "search/?jql=#{escape(jql)}AND%20status%20%21%3D%20%22Signed%20Off%22", (result) ->
+      if result.errors?
+        return
+
+      resultText = "I found #{result.total} issues for your search."
+      if result.issues.length <= maxlist
+        cb resultText
+        result.issues.forEach (issue) ->
+          cb issue.key + ": " + issue.fields.summary
+      else
+        cb resultText + " (too many to list)"
+
   robot.respond /(show )?watchers (for )?(\w+-[0-9]+)/i, (msg) ->
     if msg.message.user.id is robot.name
       return
@@ -191,6 +205,13 @@ module.exports = (robot) ->
       return
       
     search msg, msg.match[2], (text) ->
+      msg.reply text
+
+  robot.respond /show (open issues for )?(.*)/i, (msg) ->
+    if msg.message.user.id is robot.name
+      return
+
+    openIssues msg, msg.match[2], (text) ->
       msg.reply text
   
   robot.respond /([^\w\-]|^)(\w+-[0-9]+)(?=[^\w]|$)/ig, (msg) ->
