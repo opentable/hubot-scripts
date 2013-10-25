@@ -36,4 +36,4 @@ module.exports = (robot) ->
               else
                 msg.send "The #{info[1]} to #{info[2]} is #{/[^;]*$/.exec(info[3])[0].trim().toLowerCase()}"
         else
-          msg.send "I couldn't find trains from: #{trainFrom} to #{trainTo}"
+          msg.send "I couldn't find trains from: #{trainFrom} to #{trainTo}. Please make sure and use station codes (https://en.wikipedia.org/wiki/UK_railway_stations)"
