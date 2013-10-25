@@ -18,14 +18,14 @@ aliases = {
     'preprod-web1': 'http://10.21.6.26/review/service-status/'
     'preprod-web2': 'http://10.21.4.101/review/service-status/'
   promotedoffer:
-    'prod-web1': 'http://192.168.220.181/promotedoffer/service-status/'
-    'prod-web2': 'http://192.168.220.182/promotedoffer/service-status/'
-    'preprod-web1': 'http://10.21.6.26/promotedoffer/service-status/'
-    'preprod-web2': 'http://10.21.4.101/promotedoffer/service-status/'
+    'prod-web1': 'http://192.168.220.181/promoted-offer/service-status/'
+    'prod-web2': 'http://192.168.220.182/promoted-offer/service-status/'
+    'preprod-web1': 'http://10.21.6.26/promoted-offer/service-status/'
+    'preprod-web2': 'http://10.21.4.101/promoted-offer/service-status/'
 }
 
 module.exports = (robot) ->
-  robot.respond /status (.*) (.*) (.*)?$/i, (msg) ->
+  robot.respond /status (.*) (.*) (.*)$/i, (msg) ->
     status msg
 
 # NOTE: messages contains new lines for some reason.
@@ -38,11 +38,9 @@ status = (msg) ->
     monitor: msg.match[2]
     server: msg.match[3]
 
-  validateRequest bits, msg, () ->
-    msg.http('http://192.168.220.181/review/service-status/ProductFeedMonitor')
-      .get() (err, res, body) ->
-        json = JSON.parse(body)
-        msg.send "Current Status: #{json.Status || json.status}"
+  validateRequest(bits, msg, () ->
+    sendRequest buildUrl(bits), msg
+  )
 
 validateRequest = (bits, msg, callback) ->
   if not aliases[bits.app]
