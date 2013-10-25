@@ -16,12 +16,12 @@
 #
 # Commands:
 #   <Project Key>-<Issue ID> - Displays information about the JIRA ticket (if it exists)
-#   hubot show watchers for <Issue Key> - Shows watchers for the given JIRA issue
-#   hubot show comments for <Issue Key> - Shows the comments for the given JIRA issue
-#   hubot show openissues for <Issue Key> - Shows the open issues for the given JQL
-#   e.g. hubot show openissues for project = "The Cornered Badgers" AND fixVersion = "13.21"
-#   hubot search for <JQL> - Search JIRA with JQL
-#   e.g. hubot search for project = "The Cornered Badgers" AND component = "Consumer Web"
+#   hubot jira show watchers for <Issue Key> - Shows watchers for the given JIRA issue
+#   hubot jira show comments for <Issue Key> - Shows the comments for the given JIRA issue
+#   hubot jira show openissues for <Issue Key> - Shows the open issues for the given JQL
+#   e.g. hubot jira show openissues for project = "The Cornered Badgers" AND fixVersion = "13.21"
+#   hubot jira search for <JQL> - Search JIRA with JQL
+#   e.g. hubot jira search for project = "The Cornered Badgers" AND component = "Consumer Web"
 #
 # Author:
 #   codec
@@ -184,28 +184,28 @@ module.exports = (robot) ->
       else
         cb resultText + " (too many to list)"
 
-  robot.respond /(show )?watchers (for )?(\w+-[0-9]+)/i, (msg) ->
+  robot.respond /(jira show )?watchers (for )?(\w+-[0-9]+)/i, (msg) ->
     if msg.message.user.id is robot.name
       return
 
     watchers msg, msg.match[3], (text) ->
       msg.send text
 
-  robot.respond /(show )?comments (for )?(\w+-[0-9]+)/i, (msg) ->
+  robot.respond /(jira show )?comments (for )?(\w+-[0-9]+)/i, (msg) ->
     if msg.message.user.id is robot.name
       return
 
     comments msg, msg.match[3], (text) ->
       msg.send text
   
-  robot.respond /search (for )?(.*)/i, (msg) ->
+  robot.respond /jira search (for )?(.*)/i, (msg) ->
     if msg.message.user.id is robot.name
       return
       
     search msg, msg.match[2], (text) ->
       msg.reply text
 
-  robot.respond /show (openissues for )?(.*)/i, (msg) ->
+  robot.respond /jira show (openissues for )?(.*)/i, (msg) ->
     if msg.message.user.id is robot.name
       return
 

@@ -20,6 +20,7 @@
 #   hubot tc build start <buildType> - Adds a build to the queue for the specified build type
 #   hubot tc build start <buildType> of <project> - Adds a build to the queue for the specified build type of the specified project
 #   hubot tc build stop all <buildType> id <buildId> of <project> - Stops all currently running builds of a given buildType. Project parameter is optional. Please note that the special 'all' keyword will kill all currently running builds ignoring all further parameters. hubot tc build stop all all
+#   hubot tc show aliases
 #
 # Author:
 #   Micah Martin and Jens Jahnke
@@ -177,6 +178,10 @@ module.exports = (robot) ->
         return
 
       createAndPublishBuildMap(builds['build'], msg)
+
+  robot.respond /tc show aliases/i, (msg) ->
+    for key, value of aliases
+      msg.send key + ": " + value
 
   robot.respond /tc build start (.*)/i, (msg) ->
     configuration = buildName = msg.match[1]

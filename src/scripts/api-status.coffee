@@ -9,10 +9,14 @@
 #
 # Commands:
 #   hubot status review productfeed  - Returns the current state of the Reviews API ProductFeed
-#
+#   hubot status <application> [<monitor>] - Returns the current state of the given application
+
+aliases = {
+	review: 'http://192.168.220.181/review/service-status/'
+}
 
 module.exports = (robot) ->
-  robot.respond /status review productfeed$/i, (msg) ->
+  robot.respond /status (.*) (.*)$/i, (msg) ->
     status msg
 
 # NOTE: messages contains new lines for some reason.
