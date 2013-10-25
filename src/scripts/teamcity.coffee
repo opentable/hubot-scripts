@@ -38,6 +38,9 @@ module.exports = (robot) ->
 
   buildTypes = []
 
+  aliases =
+    poapi: "bt2693"
+
   getAuthHeader = ->
     return Authorization: "Basic #{new Buffer("#{username}:#{password}").toString("base64")}", Accept: "application/json"
 
@@ -98,7 +101,12 @@ module.exports = (robot) ->
         builds = JSON.parse(body).build.splice(0, amount) unless err
         callback err, msg, builds
 
+
   mapNameToIdForBuildType = (msg, project, name, callback) ->
+
+    if aliases[name]
+      callback(msg, aliases[name])
+      return
 
     execute = (buildTypes) ->
       buildType =  _.find buildTypes, (bt) -> return bt.name == name and (not project? or bt.projectName == project)
@@ -186,6 +194,7 @@ module.exports = (robot) ->
         return
 
       url = "#{base_url}/httpAuth/action.html?add2Queue=#{buildType}"
+
       msg.http(url)
         .headers(getAuthHeader())
         .get() (err, res, body) ->
