@@ -17,6 +17,7 @@
 # Commands:
 #   <Project Key>-<Issue ID> - Displays information about the JIRA ticket (if it exists)
 #   hubot show watchers for <Issue Key> - Shows watchers for the given JIRA issue
+#   hubot show comments for <Issue Key> - Shows the comments for the given JIRA issue
 #   hubot search for <JQL> - Search JIRA with JQL
 #   hubot save filter <JQL> as <name> - Save JIRA JQL query as filter in the brain
 #   hubot use filter <name> - Use a JIRA filter from the brain
@@ -117,45 +118,45 @@ module.exports = (robot) ->
 
       cb watchers.watchers.map((watcher) -> return watcher.displayName).join(", ")
 
+  comments = (msg, issue, cb) ->
+    get msg, "issue/#{issue}/comment", (comments) ->
+      if comments.errors?
+        return 
+
+      cb comments.comments.map((comment) -> return comment.body)
+
   info = (msg, issue, cb) ->
     get msg, "issue/#{issue}", (issues) ->
       if issues.errors?
         return
 
-      if useV2
-        issue =
-          key: issues.key
-          summary: issues.fields.summary
-          assignee: ->
-            if issues.fields.assignee != null
-              issues.fields.assignee.displayName
-            else
-              "no assignee"
-          status: issues.fields.status.name
-          fixVersion: ->
-            if issues.fields.fixVersions? and issues.fields.fixVersions.length > 0
-              issues.fields.fixVersions.map((fixVersion) -> return fixVersion.name).join(", ")
-            else
-              "no fix version"
-          url: process.env.HUBOT_JIRA_URL + '/browse/' + issues.key
-      else
-        issue =
-          key: issues.key
-          summary: issues.fields.summary.value
-          assignee: ->
-            if issues.fields.assignee.value != undefined
-              issues.fields.assignee.value.displayName
-            else
-              "no assignee"
-          status: issues.fields.status.value.name
-          fixVersion: ->
-            if issues.fields.fixVersions? and issues.fields.fixVersions.value != undefined
-              issues.fields.fixVersions.value.map((fixVersion) -> return fixVersion.name).join(", ")
-            else
-              "no fix version"
-          url: process.env.HUBOT_JIRA_URL + '/browse/' + issues.key
+      issue =
+        key: issues.key
+        summary: issues.fields.summary
+        project: issues.fields.project.name
+        assignee: ->
+          if issues.fields.assignee != null
+            issues.fields.assignee.displayName
+          else
+            "no assignee"
+        status: issues.fields.status.name
+        fixVersion: ->
+          if issues.fields.fixVersions? and issues.fields.fixVersions.length > 0
+            issues.fields.fixVersions.map((fixVersion) -> return fixVersion.name).join(", ")
+          else
+            "no fix version" 
+        customfield_12000: issues.fields.customfield_12000
+        components: -> 
+          if issues.fields.components? and issues.fields.components.length > 0
+            issues.fields.components.map((component) -> return component.name).join(", ")
+          else
+            "no components" 
+        url: process.env.HUBOT_JIRA_URL + '/browse/' + issues.key
 
-      cb "[#{issue.key}] #{issue.summary}. #{issue.assignee()} / #{issue.status}, #{issue.fixVersion()} #{issue.url}"
+      
+      result_text = "[#{issue.key}] #{issue.summary} \nProject: #{issue.project} \nAssignee: #{issue.assignee()} \nFixVersion: #{issue.fixVersion()} \nCurrent Status: #{issue.status} \nComponents: #{issue.components()} \nBusiness Value: \n#{issue.customfield_12000}"
+      
+      cb result_text
       
   search = (msg, jql, cb) ->
     get msg, "search/?jql=#{escape(jql)}", (result) ->
@@ -176,6 +177,13 @@ module.exports = (robot) ->
       return
 
     watchers msg, msg.match[3], (text) ->
+      msg.send text
+
+  robot.respond /(show )?comments (for )?(\w+-[0-9]+)/i, (msg) ->
+    if msg.message.user.id is robot.name
+      return
+
+    comments msg, msg.match[3], (text) ->
       msg.send text
   
   robot.respond /search (for )?(.*)/i, (msg) ->
