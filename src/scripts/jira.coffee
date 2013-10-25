@@ -18,15 +18,10 @@
 #   <Project Key>-<Issue ID> - Displays information about the JIRA ticket (if it exists)
 #   hubot show watchers for <Issue Key> - Shows watchers for the given JIRA issue
 #   hubot show comments for <Issue Key> - Shows the comments for the given JIRA issue
-
 #   hubot show open issues for <Issue Key> - Shows the open issues for the given JQL
 #   e.g. hubot show open issues for project = "The Cornered Badgers" AND fixVersion = "13.21"
-
 #   hubot search for <JQL> - Search JIRA with JQL
-#   hubot save filter <JQL> as <name> - Save JIRA JQL query as filter in the brain
-#   hubot use filter <name> - Use a JIRA filter from the brain
-#   hubot show filter(s) - Show all JIRA filters
-#   hubot show filter <name> - Show a specific JIRA filter
+#   e.g. hubot search for project = "The Cornered Badgers" AND component = "Consumer Web"
 #
 # Author:
 #   codec
@@ -232,39 +227,4 @@ module.exports = (robot) ->
           msg.send text
         recentissues.add msg.message.user.room+ticket
 
-  robot.respond /save filter (.*) as (.*)/i, (msg) ->
-    filter = filters.get msg.match[2]
 
-    if filter
-      filters.delete filter.name
-      msg.reply "Updated filter #{filter.name} for you"
-
-    filter = new IssueFilter msg.match[2], msg.match[1]
-    filters.add filter
-
-  robot.respond /delete filter (.*)/i, (msg) ->
-    filters.delete msg.match[1]
-
-  robot.respond /(use )?filter (.*)/i, (msg) ->
-    name    = msg.match[2]
-    filter  = filters.get name
-    
-    if not filter
-      msg.reply "Sorry, could not find filter #{name}"
-      return
-
-    search msg, filter.jql, (text) ->
-      msg.reply text
-
-  robot.respond /(show )?filter(s)? ?(.*)?/i, (msg) ->
-    if filters.all().length == 0
-      msg.reply "Sorry, I don't remember any filters."
-      return
-
-    if msg.match[3] == undefined
-      msg.reply "I remember #{filters.all().length} filters"
-      filters.all().forEach (filter) ->
-        msg.reply "#{filter.name}: #{filter.jql}"
-    else
-      filter = filters.get msg.match[3]
-      msg.reply "#{filter.name}: #{filter.jql}"
