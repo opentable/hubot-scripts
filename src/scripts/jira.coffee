@@ -18,8 +18,8 @@
 #   <Project Key>-<Issue ID> - Displays information about the JIRA ticket (if it exists)
 #   hubot show watchers for <Issue Key> - Shows watchers for the given JIRA issue
 #   hubot show comments for <Issue Key> - Shows the comments for the given JIRA issue
-#   hubot show open issues for <Issue Key> - Shows the open issues for the given JQL
-#   e.g. hubot show open issues for project = "The Cornered Badgers" AND fixVersion = "13.21"
+#   hubot show openissues for <Issue Key> - Shows the open issues for the given JQL
+#   e.g. hubot show openissues for project = "The Cornered Badgers" AND fixVersion = "13.21"
 #   hubot search for <JQL> - Search JIRA with JQL
 #   e.g. hubot search for project = "The Cornered Badgers" AND component = "Consumer Web"
 #
@@ -205,7 +205,7 @@ module.exports = (robot) ->
     search msg, msg.match[2], (text) ->
       msg.reply text
 
-  robot.respond /show (open issues for )?(.*)/i, (msg) ->
+  robot.respond /show (openissues for )?(.*)/i, (msg) ->
     if msg.message.user.id is robot.name
       return
 
