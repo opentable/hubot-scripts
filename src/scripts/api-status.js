@@ -11,28 +11,18 @@
 //   hubot status <application> <monitor> [<server>] - Returns the current state of the given application
 //   hubot status show aliases - List all aliases
 //   hubot set alias <app> <server> <url> - Stores a new alias for the specified application
-var Url = require('url');
-
-var aliases = {
-  review: {
-    'prod-web1': 'http://192.168.220.181/review/service-status/',
-    'prod-web2': 'http://192.168.220.182/review/service-status/',
-    'preprod-web1': 'http://10.21.6.26/review/service-status/',
-    'preprod-web2': 'http://10.21.4.101/review/service-status/'
-  },
-  promotedoffer: {
-    'prod-web1': 'http://192.168.220.181/promoted-offer/service-status/',
-    'prod-web2': 'http://192.168.220.182/promoted-offer/service-status/',
-    'preprod-web1': 'http://10.21.6.26/promoted-offer/service-status/',
-    'preprod-web2': 'http://10.21.4.101/promoted-offer/service-status/'
-  }
-},
-
-logger;
+var Url = require('url'),
+    aliases,
+    logger;
 
 module.exports = function(robot){
   logger = robot.logger;
-  robot.respond(/status (\S+) (\S+)(?:\s)?([\S|\S]+)?$/i, function(msg){
+
+  robot.brain.on('loaded', function(){
+      aliases = robot.brain.data.apiStatusAliases || {};
+  });
+
+  robot.respond(/status ((?![show|set])\S+) (\S+)(?:\s)?([\S|\S]+)?$/i, function(msg){
     status(msg);
   });
 
@@ -40,8 +30,8 @@ module.exports = function(robot){
     showAliases(msg);
   });
 
-  robot.respond(/status set alias (\S+) (\S+) (\S+)/i, function(msg){
-    setAlias(msg);
+  robot.respond(/status set alias (\S+) (\S+) (\S+)$/i, function(msg){
+    setAlias(msg, robot);
   });
 };
 
@@ -120,7 +110,7 @@ getServersForAlias = function(app){
   return res;
 },
 
-setAlias = function(msg){
+setAlias = function(msg, robot){
     var bits = {
         app: msg.match[1],
         server: msg.match[2],
@@ -134,6 +124,11 @@ setAlias = function(msg){
         return;
     }
 
+    if(!aliases[bits.app]){
+        aliases[bits.app] = {};
+    }
+
     aliases[bits.app][bits.server] = bits.url;
+    robot.brain.data.apiStatusAliases = aliases;
     msg.send('Ok, alias for ' + bits.app + ' ' + bits.server + ' was set');
 };
