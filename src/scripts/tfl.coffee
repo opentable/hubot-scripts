@@ -1,7 +1,13 @@
-# Allows Hubot to find out how the Tube is running.
+# Description:
+#   Allows Hubot to find out how the Tube is running.
 #
-# show tube status -  Shows the status for ALL lines
-# show tube is the <line> line ok -  Shows the status for the specific line
+# Dependencies:
+#   Underscore
+#
+# Commands:
+#   hubot tube status -  Shows the status for ALL lines
+#   hubot tube is the <line> line ok -  Shows the status for the specific line
+
 
 _  = require("underscore")
 
