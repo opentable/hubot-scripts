@@ -26,21 +26,20 @@ var aliases = {
   }
 },
 
-logger = {};
+logger;
 
 module.exports = function(robot){
-  logger = robot.logger
+  logger = robot.logger;
   robot.respond(/status (.*) (.*) (.*)$/i, function(msg){
     status(msg);
   });
+
+  robot.respond(/status show aliases$/i, function(msg){
+    showAliases(msg);
+  });
 };
 
-// NOTE: messages contains new lines for some reason.
-var formatString = function(string) {
-  return decodeURIComponent(string.replace(/(\n)/gm," "));
-},
-
-status = function(msg){
+var status = function(msg){
   var bits = {
     app: msg.match[1],
     monitor: msg.match[2],
@@ -85,4 +84,15 @@ sendRequest = function(url, msg){
       }
       msg.send("Current Status: " + (json.Status || json.status));
     });
-}
+},
+
+showAliases = function(msg){
+  var response = '';
+  for(al in aliases){
+    response += al + ':\n';
+    for(s in aliases[al]){
+      response += "  " + s + ": " + aliases[al][s] + "\n";
+    }
+  }
+  msg.send(response);
+};
