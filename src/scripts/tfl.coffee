@@ -38,12 +38,12 @@ module.exports = (robot) ->
         if res.statusCode == 200
           line = JSON.parse(body)
           if _(good_service_statuses).include(line.line.status.status_description)
-            msg.send "Nope it's all good, no problems reported"
+            msg.send "It's all good, no problems reported"
           if _(average_statuses).include(line.line.status.status_description)
             msg.send "Well it's semi-fucked, TfL says: '#{line.line.status.status_details}'"
           if _(bad_statuses).include(line.line.status.status_description)
-            msg.send "Totally fuckeyed mate, best to avoid, Tfl says: '#{line.line.status.status_details}'"
+            msg.send "It's in a right state, best to avoid, Tfl says: '#{line.line.status.status_details}'"
           if _(closed_statuses).include(line.line.status.status_description)
-            msg.send "No chance, it's a planned closure, you should really pay attention to the TfL website..."
+            msg.send "Are you kidding?. It's a planned closure, you should really pay attention to the TfL website..."
         else
           msg.send "No line by that name sonny, you sure you even live in London?"
