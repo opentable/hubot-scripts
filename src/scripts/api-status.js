@@ -45,23 +45,20 @@ status = function(msg){
     app: msg.match[1],
     monitor: msg.match[2],
     server: msg.match[3]
-  }
-  logger.debug('building url');
-  var url = buildUrl(bits);
+  };
 
-  logger.debug('validating request');
   validateRequest(bits, msg, function(){
-    sendRequest(url, msg);
+    sendRequest(buildUrl(bits), msg);
   });
 },
 
 validateRequest = function(bits, msg, callback){
   if(!aliases[bits.app]){
-    msg.send("the alias '#{bits.app}' does not exist you fuckhead");
+    msg.send("the alias '"+bits.app+"' does not exist you fuckhead");
     return;
   }
   if(!aliases[bits.app][bits.server]){
-    msg.send("the server '#{bits.server}' does not exist for app '#{bits.app}' you tosspot");
+    msg.send("the server '"+bits.server+"' does not exist for app '"+bits.app+"' you tosspot");
     return;
   }
 
