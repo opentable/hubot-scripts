@@ -10,7 +10,9 @@
 // Commands:
 //   hubot status <application> <monitor> [<server>] - Returns the current state of the given application
 //   hubot status show aliases - List all aliases
-//   hubot set alias <app> <server> <url> - Stores a new alias for the specified application
+//   hubot status set alias <app> <server> <url> - Stores a new alias for the specified application
+//   hubot status clear alias <app> [<server] - Clears an alias
+
 var Url = require('url'),
     aliases,
     logger;
@@ -22,7 +24,7 @@ module.exports = function(robot){
       aliases = robot.brain.data.apiStatusAliases || {};
   });
 
-  robot.respond(/status ((?![show|set])\S+) (\S+)(?:\s)?([\S|\S]+)?$/i, function(msg){
+  robot.respond(/status ((?![show|set|clear])\S+) (\S+)(?:\s)?([\S|\S]+)?$/i, function(msg){
     status(msg);
   });
 
@@ -32,6 +34,10 @@ module.exports = function(robot){
 
   robot.respond(/status set alias (\S+) (\S+) (\S+)$/i, function(msg){
     setAlias(msg, robot);
+  });
+
+  robot.respond(/status clear alias (\S+)(?:\s)?(\S+)?$/i, function(msg){
+    clearAlias(msg, robot);
   });
 };
 
@@ -131,4 +137,20 @@ setAlias = function(msg, robot){
     aliases[bits.app][bits.server] = bits.url;
     robot.brain.data.apiStatusAliases = aliases;
     msg.send('Ok, alias for ' + bits.app + ' ' + bits.server + ' was set');
+},
+
+clearAlias = function(msg, robot){
+    var app = msg.match[1],
+        server = msg.match[2];
+
+    if(!server){
+        delete aliases[app];
+        msg.send('Ok, all aliases for ' + app + ' were cleared');
+    }
+    else{
+        delete aliases[app][server];
+        msg.send('Ok, alias for ' + app + ' ' + server + ' was cleared');
+    }
+
+    robot.brain.data.apiStatusAliases = aliases;
 };
