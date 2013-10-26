@@ -1,7 +1,7 @@
 # Allows Hubot to find out how the Tube is running.
 #
-# show tube status for <line> line -  Queries the endpoint for the status of that line
-# show tube is the <line> working -  Queries the endpoint for the status of that line
+# show tube status -  Shows the status for ALL lines
+# show tube is the <line> line ok -  Shows the status for the specific line
 
 _  = require("underscore")
 
