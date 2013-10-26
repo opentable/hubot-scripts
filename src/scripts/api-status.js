@@ -105,7 +105,7 @@ showAliases = function(msg){
       response += "  " + s + ": " + aliases[al][s] + "\n";
     }
   }
-  msg.send(response);
+  msg.send(response || "No aliases set, or at least, none worth showing to you");
 },
 
 getServersForAlias = function(app){
