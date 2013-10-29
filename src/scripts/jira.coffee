@@ -101,28 +101,35 @@ module.exports = (robot) ->
   recentissues = new RecentIssues issuedelay
 
   httprequest = (msg, where) ->
-    httprequest = msg.http(process.env.HUBOT_JIRA_URL + "/rest/api/latest/" + where)
+    url = process.env.HUBOT_JIRA_URL + "/rest/api/latest/" + where
+    robot.logger.debug(url)
+    hr = robot.http(url)
     if (process.env.HUBOT_JIRA_USER)
       authdata = new Buffer(process.env.HUBOT_JIRA_USER+':'+process.env.HUBOT_JIRA_PASSWORD).toString('base64')
-      httprequest = httprequest.header('Authorization', 'Basic ' + authdata)
-    httprequest = httprequest.header('Content-type', 'application/json')
-    return httprequest
+      hr = hr.header('Authorization', 'Basic ' + authdata)
+    hr = hr.header('Content-type', 'application/json')
+    return hr
 
   get = (msg, where, cb) ->
-    request = httprequest msg, where
+    request = httprequest(msg, where)
     request.get() (err, res, body) ->
-      cb JSON.parse(body)
+      response = tryParseResponse msg, body, res
+      cb response
 
   post = (msg, where, data, cb) ->
     request = httprequest(msg, where)
     request.post(JSON.stringify(data)) (err, res, body) ->
       if err
         msg.send 'Y U NO WORK: ' + err
-      try
-        response = JSON.parse body
-      catch exception
-        msg.send 'ohes noes, I didn\'t get a valid JSON response. Also, I got this going on: ' + res.statusCode
-      cb response.body
+      response = tryParseResponse msg, body, res
+      cb response
+
+  tryParseResponse = (msg, body, res) ->
+    try
+      response = JSON.parse body
+    catch exception
+      msg.send 'ohes noes, I didn\'t get a valid JSON response. Also, I got this going on: ' + res.statusCode
+    return response
 
   watchers = (msg, issue, cb) ->
     get msg, "issue/#{issue}/watchers", (watchers) ->
@@ -139,8 +146,7 @@ module.exports = (robot) ->
       cb comments.comments.map((comment) -> return comment.body)
 
   comment = (msg, issue, text, cb) ->
-    post msg, "issue/#{issue}/comment", { body: "comment from #{msg.message.user.name} (via Hubot):\n\n" + text }, (comment) ->
-      console.log comment
+    post msg, "issue/#{issue}/comment", { body: "comment from #{msg.message.user.name} (via Hubot):\n\n" + text }, (body) ->
       cb "Ok, commented on #{issue}: #{text}"
 
   info = (msg, issue, cb) ->
@@ -191,6 +197,7 @@ module.exports = (robot) ->
         cb resultText + " (too many to list)"
 
   openIssues = (msg, jql, cb) ->
+    robot.logger.debug(jql)
     get msg, "search/?jql=#{escape(jql)}AND%20status%20%21%3D%20%22Signed%20Off%22", (result) ->
       if result.errors?
         return
