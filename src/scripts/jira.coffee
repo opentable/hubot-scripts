@@ -1,4 +1,4 @@
-# Description:
+ # Description:
 #   Messing with the JIRA REST API
 #
 # Dependencies:
@@ -100,15 +100,29 @@ module.exports = (robot) ->
 
   recentissues = new RecentIssues issuedelay
 
-  get = (msg, where, cb) ->
-    console.log(process.env.HUBOT_JIRA_URL + "/rest/api/latest/" + where)
-
+  httprequest = (msg, where) ->
     httprequest = msg.http(process.env.HUBOT_JIRA_URL + "/rest/api/latest/" + where)
     if (process.env.HUBOT_JIRA_USER)
       authdata = new Buffer(process.env.HUBOT_JIRA_USER+':'+process.env.HUBOT_JIRA_PASSWORD).toString('base64')
       httprequest = httprequest.header('Authorization', 'Basic ' + authdata)
-    httprequest.get() (err, res, body) ->
-        cb JSON.parse(body)
+    httprequest = httprequest.header('Content-type', 'application/json')
+    return httprequest
+
+  get = (msg, where, cb) ->
+    request = httprequest msg, where
+    request.get() (err, res, body) ->
+      cb JSON.parse(body)
+
+  post = (msg, where, data, cb) ->
+    request = httprequest(msg, where)
+    request.post(JSON.stringify(data)) (err, res, body) ->
+      if err
+        msg.send 'Y U NO WORK: ' + err
+      try
+        response = JSON.parse body
+      catch exception
+        msg.send 'ohes noes, I didn\'t get a valid JSON response. Also, I got this going on: ' + res.statusCode
+      cb response.body
 
   watchers = (msg, issue, cb) ->
     get msg, "issue/#{issue}/watchers", (watchers) ->
@@ -123,6 +137,11 @@ module.exports = (robot) ->
         return 
 
       cb comments.comments.map((comment) -> return comment.body)
+
+  comment = (msg, issue, text, cb) ->
+    post msg, "issue/#{issue}/comment", { body: "comment from #{msg.message.user.name} (via Hubot):\n\n" + text }, (comment) ->
+      console.log comment
+      cb "Ok, commented on #{issue}: #{text}"
 
   info = (msg, issue, cb) ->
     get msg, "issue/#{issue}", (issues) ->
@@ -210,6 +229,13 @@ module.exports = (robot) ->
       return
 
     openIssues msg, msg.match[2], (text) ->
+      msg.reply text
+
+  robot.respond /jira comment (\w+-[0-9]+) (.*)/i, (msg) ->
+    if msg.message.user.id is robot.name
+      return
+
+    comment msg, msg.match[1], msg.match[2], (text) ->
       msg.reply text
   
   robot.respond /([^\w\-]|^)(\w+-[0-9]+)(?=[^\w]|$)/ig, (msg) ->
