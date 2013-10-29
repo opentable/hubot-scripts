@@ -20,6 +20,7 @@
 #   hubot jira comments for <Issue Key> - Shows the comments for the given JIRA issue
 #   hubot jira comment on <issue key> <comment text> - Adds a comment to the specified issue
 #   hubot jira move <issue key> [to] <transition name> - Transitions an issue
+#   hubot jira transitions [for] <issue key> - Lists the available transitions for the given issue
 #   hubot jira openissues for <JQL> - Shows the open issues for the given JQL
 #   e.g. hubot jira openissues for project = "The Cornered Badgers" AND fixVersion = "13.21"
 #   hubot jira search for <JQL> - Search JIRA with JQL
@@ -116,7 +117,7 @@ module.exports = (robot) ->
     request = httprequest(where)
     request.get() (err, res, body) ->
       response = tryParseResponse msg, body, res
-      cb response
+      cb response, res.statusCode
 
   post = (msg, where, data, cb) ->
     request = httprequest(where)
@@ -214,10 +215,18 @@ module.exports = (robot) ->
       else
         cb resultText + " (too many to list)"
 
+  transitions = (msg, issue, cb) ->
+    get msg, "issue/#{issue}/transitions", (body, statusCode) ->
+      if not body or statusCode is 404
+        cb "Issue does not exist"
+        return
+      cb "Available transitions for #{issue} are: #{(t.to.name for t in body.transitions)}"
+
   transitionIssue = (msg, issue, status, cb) ->
       where = "issue/#{issue}/transitions"
-      get msg, where, (body) ->
-        if not body
+      get msg, where, (body, statusCode) ->
+        if not body or statusCode is 404
+          cb "Issue does not exist"
           return
         transition = (t for t in body.transitions when t.to.name is status)
         if not transition[0]
@@ -265,8 +274,12 @@ module.exports = (robot) ->
     comment msg, msg.match[1], msg.match[2], (text) ->
       msg.reply text
 
-  robot.respond /jira move issue (\w+-[0-9]+) (.*)/i, (msg) ->
+  robot.respond /jira move issue (?:to )?(\w+-[0-9]+) (.*)/i, (msg) ->
     transitionIssue msg, msg.match[1], msg.match[2], (text) ->
+      msg.reply text
+
+  robot.respond /jira transitions (?:for )?(\w+-[0-9]+)/i, (msg) ->
+    transitions msg, msg.match[1], (text) ->
       msg.reply text
 
   robot.hear /^((?!jira).)*([^\w\-]|^)(\w+-[0-9]+)(?=[^\w]|$)/ig, (msg) ->
