@@ -251,7 +251,7 @@ module.exports = (robot) ->
       return
 
     if (ignoredusers.some (user) -> user == msg.message.user.name)
-      console.log 'ignoring user due to blacklist:', msg.message.user.name
+      robot.logger.info 'ignoring user due to blacklist:', msg.message.user.name
       return
    
     for matched in msg.match
