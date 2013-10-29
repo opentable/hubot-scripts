@@ -1,4 +1,4 @@
- # Description:
+# Description:
 #   Messing with the JIRA REST API
 #
 # Dependencies:
@@ -21,10 +21,8 @@
 #   hubot jira comment on <issue key> <comment text> - Adds a comment to the specified issue
 #   hubot jira transition <issue key> [to] <transition name> - Transitions an issue
 #   hubot jira transitions [for] <issue key> - Lists the available transitions for the given issue
-#   hubot jira openissues for <JQL> - Shows the open issues for the given JQL
-#   e.g. hubot jira openissues for project = "The Cornered Badgers" AND fixVersion = "13.21"
-#   hubot jira search for <JQL> - Search JIRA with JQL
-#   e.g. hubot jira search for project = "The Cornered Badgers" AND component = "Consumer Web"
+#   hubot jira openissues for <JQL> - Shows the open issues for the given JQL (e.g. project = "myProject" and FixVersion = "12.34")
+#   hubot jira search for <JQL> - Search JIRA with JQL (e.g. project = "myProject" AND component = "Foo")
 #
 # Author:
 #   codec
