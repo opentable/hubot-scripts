@@ -16,10 +16,11 @@
 #
 # Commands:
 #   <Project Key>-<Issue ID> - Displays information about the JIRA ticket (if it exists)
-#   hubot jira show watchers for <Issue Key> - Shows watchers for the given JIRA issue
-#   hubot jira show comments for <Issue Key> - Shows the comments for the given JIRA issue
-#   hubot jira show openissues for <Issue Key> - Shows the open issues for the given JQL
-#   e.g. hubot jira show openissues for project = "The Cornered Badgers" AND fixVersion = "13.21"
+#   hubot jira watchers for <Issue Key> - Shows watchers for the given JIRA issue
+#   hubot jira comments for <Issue Key> - Shows the comments for the given JIRA issue
+#   hubor jira comment on <issue key> <comment text> - Adds a comment to the specified issue
+#   hubot jira openissues for <JQL> - Shows the open issues for the given JQL
+#   e.g. hubot jira openissues for project = "The Cornered Badgers" AND fixVersion = "13.21"
 #   hubot jira search for <JQL> - Search JIRA with JQL
 #   e.g. hubot jira search for project = "The Cornered Badgers" AND component = "Consumer Web"
 #
@@ -210,18 +211,18 @@ module.exports = (robot) ->
       else
         cb resultText + " (too many to list)"
 
-  robot.respond /(jira show )?watchers (for )?(\w+-[0-9]+)/i, (msg) ->
+  robot.respond /jira watchers (for )?(\w+-[0-9]+)$/i, (msg) ->
     if msg.message.user.id is robot.name
       return
 
     watchers msg, msg.match[3], (text) ->
       msg.send text
 
-  robot.respond /(jira show )?comments (for )?(\w+-[0-9]+)/i, (msg) ->
+  robot.respond /jira comments (for )?(\w+-[0-9]+)$/i, (msg) ->
     if msg.message.user.id is robot.name
       return
 
-    comments msg, msg.match[3], (text) ->
+    comments msg, msg.match[2], (text) ->
       msg.send text
   
   robot.respond /jira search (for )?(.*)/i, (msg) ->
@@ -231,14 +232,14 @@ module.exports = (robot) ->
     search msg, msg.match[2], (text) ->
       msg.reply text
 
-  robot.respond /jira show (openissues for )?(.*)/i, (msg) ->
+  robot.respond /jira openissues (for )?(.*)$/i, (msg) ->
     if msg.message.user.id is robot.name
       return
 
     openIssues msg, msg.match[2], (text) ->
       msg.reply text
 
-  robot.respond /jira comment (\w+-[0-9]+) (.*)/i, (msg) ->
+  robot.respond /jira comment (on )?(\w+-[0-9]+) (.*)/i, (msg) ->
     if msg.message.user.id is robot.name
       return
 
