@@ -18,7 +18,8 @@
 #   <issue key> - Displays information about the JIRA ticket (if it exists)
 #   hubot jira watchers for <Issue Key> - Shows watchers for the given JIRA issue
 #   hubot jira comments for <Issue Key> - Shows the comments for the given JIRA issue
-#   hubor jira comment on <issue key> <comment text> - Adds a comment to the specified issue
+#   hubot jira comment on <issue key> <comment text> - Adds a comment to the specified issue
+#   hubot jira move <issue key> [to] <transition name> - Transitions an issue
 #   hubot jira openissues for <JQL> - Shows the open issues for the given JQL
 #   e.g. hubot jira openissues for project = "The Cornered Badgers" AND fixVersion = "13.21"
 #   hubot jira search for <JQL> - Search JIRA with JQL
@@ -101,7 +102,7 @@ module.exports = (robot) ->
 
   recentissues = new RecentIssues issuedelay
 
-  httprequest = (msg, where) ->
+  httprequest = (where) ->
     url = process.env.HUBOT_JIRA_URL + "/rest/api/latest/" + where
     robot.logger.debug(url)
     hr = robot.http(url)
@@ -112,24 +113,26 @@ module.exports = (robot) ->
     return hr
 
   get = (msg, where, cb) ->
-    request = httprequest(msg, where)
+    request = httprequest(where)
     request.get() (err, res, body) ->
       response = tryParseResponse msg, body, res
       cb response
 
   post = (msg, where, data, cb) ->
-    request = httprequest(msg, where)
+    request = httprequest(where)
     request.post(JSON.stringify(data)) (err, res, body) ->
       if err
         msg.send 'Y U NO WORK: ' + err
       response = tryParseResponse msg, body, res
-      cb response
+      cb response, res.statusCode
 
   tryParseResponse = (msg, body, res) ->
+    if not body
+      return
     try
       response = JSON.parse body
     catch exception
-      msg.send 'ohes noes, I didn\'t get a valid JSON response. Also, I got this going on: ' + res.statusCode
+      msg.send 'ohes noes, I didn\'t get a valid JSON response. Also, I got this going on: HTTP/1.1 ' + res.statusCode
     return response
 
   watchers = (msg, issue, cb) ->
@@ -211,6 +214,22 @@ module.exports = (robot) ->
       else
         cb resultText + " (too many to list)"
 
+  transitionIssue = (msg, issue, status, cb) ->
+      where = "issue/#{issue}/transitions"
+      get msg, where, (body) ->
+        if not body
+          return
+        transition = (t for t in body.transitions when t.to.name is status)
+        if not transition[0]
+          cb "Transition '#{status}' does not exist for #{issue}, possible transitions are: #{(t.to.name for t in body.transitions)}"
+          return
+        post msg, where, { transition: { id: transition[0].id } }, (body, statusCode) ->
+          if statusCode is 204
+            cb "Ok, #{issue} was transitioned to #{status}"
+          else
+            robot.logger.error body
+            cb "Oopsy, something broke. I got this: #{statusCode}"
+
   robot.respond /jira watchers (for )?(\w+-[0-9]+)$/i, (msg) ->
     if msg.message.user.id is robot.name
       return
@@ -245,7 +264,11 @@ module.exports = (robot) ->
 
     comment msg, msg.match[1], msg.match[2], (text) ->
       msg.reply text
-  
+
+  robot.respond /jira move issue (\w+-[0-9]+) (.*)/i, (msg) ->
+    transitionIssue msg, msg.match[1], msg.match[2], (text) ->
+      msg.reply text
+
   robot.hear /^((?!jira).)*([^\w\-]|^)(\w+-[0-9]+)(?=[^\w]|$)/ig, (msg) ->
     if msg.message.user.id is robot.name
       return
