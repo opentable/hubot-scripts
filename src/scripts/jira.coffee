@@ -246,7 +246,7 @@ module.exports = (robot) ->
     comment msg, msg.match[1], msg.match[2], (text) ->
       msg.reply text
   
-  robot.respond /([^\w\-]|^)(\w+-[0-9]+)(?=[^\w]|$)/ig, (msg) ->
+  robot.hear /([^\w\-]|^)(\w+-[0-9]+)(?=[^\w]|$)/ig, (msg) ->
     if msg.message.user.id is robot.name
       return
 
@@ -260,5 +260,3 @@ module.exports = (robot) ->
         info msg, ticket, (text) ->
           msg.send text
         recentissues.add msg.message.user.room+ticket
-
-
