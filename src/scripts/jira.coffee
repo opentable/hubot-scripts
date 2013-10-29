@@ -179,7 +179,7 @@ module.exports = (robot) ->
         url: process.env.HUBOT_JIRA_URL + '/browse/' + issues.key
 
       
-      result_text = "[#{issue.key}] #{issue.summary} \nProject: #{issue.project} \nAssignee: #{issue.assignee()} \nFixVersion: #{issue.fixVersion()} \nCurrent Status: #{issue.status} \nComponents: #{issue.components()} \nBusiness Value: \n#{issue.customfield_12000}"
+      result_text = "[#{issue.key}] #{issue.summary} \n#{issue.url}\nProject: #{issue.project} \nAssignee: #{issue.assignee()} \nFixVersion: #{issue.fixVersion()} \nCurrent Status: #{issue.status} \nComponents: #{issue.components()}"
       
       cb result_text
       
