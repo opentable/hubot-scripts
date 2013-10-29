@@ -19,7 +19,7 @@
 #   hubot jira watchers for <Issue Key> - Shows watchers for the given JIRA issue
 #   hubot jira comments for <Issue Key> - Shows the comments for the given JIRA issue
 #   hubot jira comment on <issue key> <comment text> - Adds a comment to the specified issue
-#   hubot jira move <issue key> [to] <transition name> - Transitions an issue
+#   hubot jira transition <issue key> [to] <transition name> - Transitions an issue
 #   hubot jira transitions [for] <issue key> - Lists the available transitions for the given issue
 #   hubot jira openissues for <JQL> - Shows the open issues for the given JQL
 #   e.g. hubot jira openissues for project = "The Cornered Badgers" AND fixVersion = "13.21"
@@ -274,7 +274,7 @@ module.exports = (robot) ->
     comment msg, msg.match[1], msg.match[2], (text) ->
       msg.reply text
 
-  robot.respond /jira move issue (?:to )?(\w+-[0-9]+) (.*)/i, (msg) ->
+  robot.respond /jira transition (\w+-[0-9]+) (?:to )?(.*)/i, (msg) ->
     transitionIssue msg, msg.match[1], msg.match[2], (text) ->
       msg.reply text
 
