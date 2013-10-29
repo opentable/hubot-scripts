@@ -15,7 +15,7 @@
 #   HUBOT_JIRA_IGNOREUSERS
 #
 # Commands:
-#   <Project Key>-<Issue ID> - Displays information about the JIRA ticket (if it exists)
+#   <issue key> - Displays information about the JIRA ticket (if it exists)
 #   hubot jira watchers for <Issue Key> - Shows watchers for the given JIRA issue
 #   hubot jira comments for <Issue Key> - Shows the comments for the given JIRA issue
 #   hubor jira comment on <issue key> <comment text> - Adds a comment to the specified issue
@@ -246,7 +246,7 @@ module.exports = (robot) ->
     comment msg, msg.match[1], msg.match[2], (text) ->
       msg.reply text
   
-  robot.hear /([^\w\-]|^)(\w+-[0-9]+)(?=[^\w]|$)/ig, (msg) ->
+  robot.hear /^((?!jira).)*([^\w\-]|^)(\w+-[0-9]+)(?=[^\w]|$)/ig, (msg) ->
     if msg.message.user.id is robot.name
       return
 
