@@ -17,7 +17,6 @@ module.exports = (robot) ->
 
   search = (msg, server, query) ->
     msg.http("http://#{server}/_search?#{query}")
-    msg.send("Server http://#{server}/_search?#{query}")
       .get() (err, res, body) ->
         json = JSON.parse(body)
         hits = json['hits']
