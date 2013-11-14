@@ -18,24 +18,26 @@ module.exports = (robot) ->
   search = (msg, server, query) ->
     msg.http("http://#{server}/_search?#{query}")
     msg.send("Server http://#{server}/_search?#{query}")
-      #.get() (err, res, body) ->
-      #  json = JSON.parse(body)
-      #  msg.send("end")
+      .get() (err, res, body) ->
+        json = JSON.parse(body)
+        hits = json['hits']
+        totalhits = hits["hits"]
+        msg.send("There are #{totalhits} for the query \n#{query}")
 
   cluster_health = (msg, server) ->
     msg.http("http://#{server}/_cluster/health")
       .get() (err, res, body) ->
         json = JSON.parse(body)
-        cluster_name=['cluster']
+        cluster_name = json['cluster']
         status = json['status']
         number_of_nodes = json['number_of_nodes']
         msg.send "Cluster: #{cluster_name} \nStatus: #{status} \n Nodes: #{number_of_nodes}"
 
   node_health = (msg, server) ->
-    msg.http("http://#{server}/_status")
+    msg.http("http://#{server}/")
       .get() (err, res, body) ->
         json = JSON.parse(body)
-        name =['name']
+        name = json['name']
         status = json['status']
         msg.send "Server: #{name} \nStatus: #{status}"
 
