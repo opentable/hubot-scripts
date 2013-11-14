@@ -19,9 +19,8 @@ module.exports = (robot) ->
     msg.http("http://#{server}/_search?#{query}")
       .get() (err, res, body) ->
         json = JSON.parse(body)
-        hits = json['hits']
-        totalhits = hits["hits"]
-        msg.send("There are #{totalhits} for the query \n#{query}")
+        firsthit = JSON.stringify(json.hits.hits[0])
+        msg.send("There are #{json.hits.total} for the search http://#{server}/_search?#{query} The first result is /n#{firsthit}")
 
   cluster_health = (msg, server) ->
     msg.http("http://#{server}/_cluster/health")
