@@ -12,6 +12,7 @@
 //   hubot status show aliases - List all aliases
 //   hubot status set alias <app> <server> <url> - Stores a new alias for the specified application
 //   hubot status clear alias <app> [<server] - Clears an alias
+//   hubot lbstatus <application> [<server>] - Returns lbstatus of the given application
 
 var Url = require('url'),
     aliases,
@@ -24,7 +25,7 @@ module.exports = function(robot){
       aliases = robot.brain.data.apiStatusAliases || {};
   });
 
-  robot.respond(/status ((?![show|set|clear])\S+) (\S+)(?:\s)?([\S|\S]+)?$/i, function(msg){
+  robot.respond(/status ((?![show|set|clear])|\S+) (\S+)(?:\s)?(\S+)?$/i, function(msg){
     status(msg);
   });
 
@@ -39,6 +40,10 @@ module.exports = function(robot){
   robot.respond(/status clear alias (\S+)(?:\s)?(\S+)?$/i, function(msg){
     clearAlias(msg, robot);
   });
+
+  robot.respond(/lbstatus ((?![show|set|clear])|\S+)(?:\s)?(\S+)?$/i, function(msg){
+    lbstatus(msg);
+  });
 };
 
 var status = function(msg){
@@ -50,14 +55,12 @@ var status = function(msg){
 
   validateRequest(bits, msg, function(){
     for(var i=0; i<bits.server.length; i++){
-        sendRequest(buildUrl(bits.app, bits.monitor, bits.server[i]), msg, bits.server[i], function(status, servername){
+        sendRequest(buildUrl(bits.app, '/service-status/' + bits.monitor, bits.server[i]), msg, bits.server[i], function(status, servername){
             if(!status){
-                msg.send("I didn't get a valid response, you're SOL, sorry");
-                return;
+                return invalidResponse(msg);
             }
             if(status === "Unknown"){
-                msg.send("That monitor does not exist you wanker");
-                return;
+               return unknownMonitor(msg);
             }
             msg.send(bits.app + " " + bits.monitor + " " + servername + ", Current Status: " + status);
         });
@@ -65,22 +68,37 @@ var status = function(msg){
   });
 },
 
+lbstatus = function(msg){
+    var bits = {
+        app: msg.match[1],
+        server: msg.match[2]
+    };
+
+    validateRequest(bits, msg, function(){
+        for(var i=0; i<bits.server.length; i++){
+            sendRequest(buildUrl(bits.app, '/_lbstatus', bits.server[i]), msg, bits.server[i], function(status, servername){
+                if(!status){
+                    return invalidResponse(msg);
+                }
+                msg.send(bits.app + " " + servername + ", Current Status: " + status);
+            });
+        }
+    });
+},
+
 validateRequest = function(bits, msg, callback){
   if(!aliases[bits.app]){
-    msg.send("the alias '" + bits.app + "' does not exist you fuckhead");
-    return;
+    return unknownAlias(msg, bits.app);
   }
   if(!bits.server){
     bits.server = getServersForAlias(bits.app);
   }
   else if(!aliases[bits.app][bits.server]){
-    msg.send("the server '" + bits.server + "' does not exist for app '" + bits.app + "' you tosspot");
-    return;
+    return unknownServer(msg, bits.app, bits.server);
   }
   else{
       bits.server = [bits.server];
   }
-  logger.debug(bits);
   callback();
 },
 
@@ -92,7 +110,15 @@ sendRequest = function(url, msg, servername, cb){
   logger.info(url);
   msg.http(url)
     .get()(function(err, res, body){
-      var json = JSON.parse(body);
+      var json;
+      try{
+          json = JSON.parse(body);
+      }
+      catch(exception){
+          logger.warning("response was not json, returning as raw");
+          cb(body, servername);
+          return;
+      }
       cb(json.Status || json.status, servername);
     });
 },
@@ -153,4 +179,20 @@ clearAlias = function(msg, robot){
     }
 
     robot.brain.data.apiStatusAliases = aliases;
+},
+
+unknownMonitor = function(msg){
+    msg.send("That monitor does not exist you wanker");
+},
+
+invalidResponse = function(msg){
+    msg.send("I didn't get a valid response, you're SOL, sorry");
+},
+
+unknownAlias = function(msg, app){
+    msg.send("the alias '" + app + "' does not exist you fuckhead");
+},
+
+unknownServer = function(msg, app, server){
+    msg.send("the server '" + server + "' does not exist for app '" + app + "' you tosspot");
 };
