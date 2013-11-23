@@ -35,9 +35,6 @@ module.exports = (robot) ->
       .get() (err, res, body) ->
         msg.send(body)
 
-
-
-
   robot.respond /appd applications/i, (msg) ->
     if msg.message.user.id is robot.name
       return
