@@ -71,6 +71,83 @@
       startBuild(msg, robot);
     });
 
+    robot.respond(/tc list (projects|buildTypes|builds) ?(.*)?/i, function(msg) {
+      var amount, buildTypeMatches, buildTypeRE, configuration, matches, option, project, projectRE, type;
+      type = msg.match[1];
+      option = msg.match[2];
+      switch (type) {
+        case "projects":
+          return getProjects(msg, function(err, msg, projects) {
+            var message, project, _i, _len;
+            message = "";
+            for (_i = 0, _len = projects.length; _i < _len; _i++) {
+              project = projects[_i];
+              message += project.name + "\n";
+            }
+            return msg.send(message);
+          });
+        case "buildTypes":
+          project = null;
+          if (option != null) {
+            projectRE = /^\s*of (.*)/i;
+            matches = option.match(projectRE);
+            if ((matches != null) && matches.length > 1) {
+              project = matches[1];
+            }
+          }
+          return getBuildTypes(msg, project, function(err, msg, buildTypes) {
+            var buildType, message, _i, _len;
+            message = "";
+            for (_i = 0, _len = buildTypes.length; _i < _len; _i++) {
+              buildType = buildTypes[_i];
+              message += "" + buildType.name + " of " + buildType.projectName + "\n";
+            }
+            return msg.send(message);
+          });
+        case "builds":
+          configuration = option;
+          project = null;
+          buildTypeRE = /^\s*of (.*?) of (.+) (\d+)/i;
+          buildTypeMatches = option.match(buildTypeRE);
+          if (buildTypeMatches != null) {
+            configuration = buildTypeMatches[1];
+            project = buildTypeMatches[2];
+            amount = parseInt(buildTypeMatches[3]);
+          } else {
+            buildTypeRE = /^\s*of (.+) (\d+)/i;
+            buildTypeMatches = option.match(buildTypeRE);
+            if (buildTypeMatches != null) {
+              configuration = buildTypeMatches[1];
+              amount = parseInt(buildTypeMatches[2]);
+              project = null;
+            } else {
+              amount = 1;
+              buildTypeRE = /^\s*of (.*?) of (.*)/i;
+              buildTypeMatches = option.match(buildTypeRE);
+              if (buildTypeMatches != null) {
+                configuration = buildTypeMatches[1];
+                project = buildTypeMatches[2];
+              } else {
+                buildTypeRE = /^\s*of (.*)/i;
+                buildTypeMatches = option.match(buildTypeRE);
+                if (buildTypeMatches != null) {
+                  configuration = buildTypeMatches[1];
+                  project = null;
+                }
+              }
+            }
+          }
+
+          return getBuilds(msg, project, configuration, amount, function(err, msg, builds) {
+            if (!builds) {
+              msg.send("Could not find builds for " + option);
+              return;
+            }
+            return createAndPublishBuildMap(builds, msg);
+          });
+      }
+    });
+
     showBuilds = function(msg, robot){
       return getCurrentBuilds(msg, function(err, builds, msg) {
         if (typeof builds === 'string') {
@@ -91,9 +168,6 @@
       project = null;
       buildTypeRE = /(.*?) of (.*)/i;
       buildTypeMatches = buildName.match(buildTypeRE);
-      console.log('Match 1: ' + msg.match[1]);
-      console.log('Match 2: ' + msg.match[2]);
-      console.log('Match 3: ' + msg.match[3]);
 
       if (buildTypeMatches != null) {
         configuration = buildTypeMatches[2];
@@ -248,7 +322,7 @@
       if (project != null) {
         projectSegment = "/projects/name:" + (encodeURIComponent(project));
       }
-      url = "" + base_url + "/httpAuth/app/rest" + projectSegment + "/buildTypes/name:" + (encodeURIComponent(configuration)) + "/builds";
+      url = "" + base_url + "/httpAuth/app/rest" + projectSegment + "/buildTypes/id:" + (aliases[configuration]) + "/builds";
       return msg.http(url).headers(getAuthHeader()).query({
         locator: ["count:" + amount, "running:any"].join(",")
       }).get()(function(err, res, body) {
