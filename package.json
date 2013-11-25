@@ -28,6 +28,7 @@
   "dependencies": {
     "redis": "0.8.4",
     "underscore" : "1.5.2",
-    "gitio": "1.0.1"
+    "gitio": "1.0.1",
+    "cheerio": "0.12.4"
   }
 }
