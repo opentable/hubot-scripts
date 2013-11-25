@@ -20,7 +20,9 @@ module.exports = function(robot){
 
     robot.respond(/tug$/i, function(msg){
         pull(msg, function(){
-            sepukku(msg);
+            cleanup(function(){
+                sepukku(msg);
+            });
         });
     });
 };
@@ -37,9 +39,31 @@ var pull = function(msg, callback){
     });
 
     gitpull.on('close', function (code) {
-        logger.debug('[git-pull] exited with code ' + code);
+        logger.info('[git-pull] updated repo, exited with code: ' + code);
         if(code !== 0){
             msg.send('Could not update hubot, git-pull exited with code ' + code);
+        }
+        else{
+            callback()
+        }
+    });
+},
+
+cleanup = function(callback){
+    var rm = cp.spawn('rm', ['-rf', process.cwd() + '/node_modules/hubot-scripts']);
+
+    rm.stdout.on('data', function (data) {
+        logger.debug('[rm] ' + data);
+    });
+
+    rm.stderr.on('data', function (data) {
+        logger.error('[rm] err: ' + data);
+    });
+
+    rm.on('close', function (code) {
+        logger.info('[rm] deleted hubot-scripts directory');
+        if(code !== 0){
+            msg.send('Could not update hubot, rm exited with code ' + code);
         }
         else{
             callback()
