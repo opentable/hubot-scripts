@@ -72,6 +72,8 @@ cleanup = function(callback){
 },
 
 sepukku = function(msg){
-    msg.send('Goodbye, cruel world!');
-    process.exit(0);
+    msg.send('hubot has climaxed, sleep now zzzzz ....');
+    setTimeout(function(){
+        process.exit(0);
+    }, 2000);
 };
