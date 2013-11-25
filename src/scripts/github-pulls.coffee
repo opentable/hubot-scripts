@@ -11,9 +11,9 @@
 #   HUBOT_GITHUB_ORG
 #
 # Commands:
-#   hubot show [me] <user/repo> pulls [with <regular expression>] -- Shows open pull requests for that project by filtering pull request's title.
-#   hubot show [me] <repo> pulls -- Show open pulls for HUBOT_GITHUB_USER/<repo>, if HUBOT_GITHUB_USER is configured
-#   hubot show [me] org-pulls [for <organization>] -- Show open pulls for all repositories of an organization, default is HUBOT_GITHUB_ORG
+#   hubot github show [me] <user/repo> pulls [with <regular expression>] -- Shows open pull requests for that project by filtering pull request's title.
+#   hubot github show [me] <repo> pulls -- Show open pulls for HUBOT_GITHUB_USER/<repo>, if HUBOT_GITHUB_USER is configured
+#   hubot github show [me] org-pulls [for <organization>] -- Show open pulls for all repositories of an organization, default is HUBOT_GITHUB_ORG
 #
 # Notes:
 #   HUBOT_GITHUB_API allows you to set a custom URL path (for Github enterprise users)
@@ -31,7 +31,7 @@ module.exports = (robot) ->
   unless (url_api_base = process.env.HUBOT_GITHUB_API)?
     url_api_base = "https://api.github.com"
 
-  robot.respond /show\s+(me\s+)?(.*)\s+pulls(\s+with\s+)?(.*)?/i, (msg)->
+  robot.respond /github show\s+(me\s+)?(.*)\s+pulls(\s+with\s+)?(.*)?/i, (msg)->
     repo = github.qualified_repo msg.match[2]
     filter_reg_exp = new RegExp(msg.match[4], "i") if msg.match[3]
 
@@ -57,7 +57,7 @@ module.exports = (robot) ->
 
       msg.send summary
 
-  robot.respond /show\s+(me\s+)?org\-pulls(\s+for\s+)?(.*)?/i, (msg) ->
+  robot.respond /github show\s+(me\s+)?org\-pulls(\s+for\s+)?(.*)?/i, (msg) ->
 
     org_name = msg.match[3] || process.env.HUBOT_GITHUB_ORG
 
