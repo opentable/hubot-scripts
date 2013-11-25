@@ -17,11 +17,10 @@
 //   hubot show me builds - Lists ALL running builds. I'm not sure how useful this is. May wish to delete
 //   hubot <tc build start|deploy> <alias> OR <buildType> - Kicks off a build in TeamCity
 //
-// Original Authors:
-//   Micah Martin and Jens Jahnke
-// Contributor:
+// Author:
+//   Micah Martin
+//   Jens Jahnke
 //   Ryan Tomlinson
-
 
 (function() {
   var util, _;
