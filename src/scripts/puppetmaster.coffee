@@ -36,8 +36,11 @@ module.exports = (robot) ->
           msg.send("Current Node Status on #{host}\nUnresponsive: #{unresponsive}\nFailed: #{failed}\nChanged: #{changed}\nUnchanged: #{unchanged}")
 
   showAliases = (msg) ->
-    for alias of _puppetmasterAliases
-      msg.send("I found '#{alias}' as an alias for #{_puppetmasterAliases[alias]}")
+    if _puppetmasterAliases?
+      msg.send("I cannot find any puppetmaster aliases")
+    else
+      for alias of _puppetmasterAliases
+        msg.send("I found '#{alias}' as an alias for #{_puppetmasterAliases[alias]}")
 
   clearAlias = (msg, alias) ->
     delete _puppetmasterAliases[alias]
