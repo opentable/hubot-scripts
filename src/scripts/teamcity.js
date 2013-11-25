@@ -15,7 +15,7 @@
 //   hubot tc set alias <alias> <buildType> - Sets an association between alias and build type
 //   hubot tc clear alias <alias> - Deletes this alias from the brain
 //   hubot show me builds - Lists ALL running builds. I'm not sure how useful this is. May wish to delete
-//   hubot tc build start <alias> OR <buildType> - Kicks off a build in TeamCity
+//   hubot <tc build start|deploy> <alias> OR <buildType> - Kicks off a build in TeamCity
 //
 //   DEPRECATED - THOUGH ONLY TEMPORARILY
 //   hubot status <application> <monitor> [<server>] - Returns the current state of the given application
@@ -52,13 +52,7 @@
     });
 
     robot.respond(/tc show aliases/i, function(msg) {
-      var key, responseContainingAliases, value;
-      responseContainingAliases = '';
-      for (key in aliases) {
-        value = aliases[key];
-        responseContainingAliases += key + ": " + value + "\n";
-      }
-      return msg.send(responseContainingAliases);
+      showAliases(msg, robot);
     });
 
     robot.respond(/tc set alias (\S+) (\S+)$/i, function(msg) {
@@ -70,6 +64,14 @@
     });
 
     robot.respond(/show me builds/i, function(msg) {
+      showBuilds(msg, robot);
+    });
+
+    robot.respond(/(tc build start|deploy) (\S+) ?(prod)?/i, function(msg) {
+      startBuild(msg, robot);
+    });
+
+    showBuilds = function(msg, robot){
       return getCurrentBuilds(msg, function(err, builds, msg) {
         if (typeof builds === 'string') {
           builds = JSON.parse(builds);
@@ -80,19 +82,22 @@
         }
         return createAndPublishBuildMap(builds['build'], msg);
       });
-    });
+    }
 
-    robot.respond(/tc build start (\S+) ?(prod)?/i, function(msg) {
+    startBuild = function(msg, robot){
       var buildName, buildTypeMatches, buildTypeRE, configuration, project, isProd;
-      configuration = buildName = msg.match[1];
-      isProd = msg.match[2];
+      configuration = buildName = msg.match[2];
+      isProd = msg.match[3];
       project = null;
       buildTypeRE = /(.*?) of (.*)/i;
       buildTypeMatches = buildName.match(buildTypeRE);
+      console.log('Match 1: ' + msg.match[1]);
+      console.log('Match 2: ' + msg.match[2]);
+      console.log('Match 3: ' + msg.match[3]);
 
       if (buildTypeMatches != null) {
-        configuration = buildTypeMatches[1];
-        project = buildTypeMatches[2];
+        configuration = buildTypeMatches[2];
+        project = buildTypeMatches[3];
       }
 
       if (isProd)
@@ -121,7 +126,17 @@
           }
         });
       });
-    });
+    }
+
+    showAliases = function(msg, robot) {
+      var key, responseContainingAliases, value;
+      responseContainingAliases = '';
+      for (key in aliases) {
+        value = aliases[key];
+        responseContainingAliases += key + ": " + value + "\n";
+      }
+      return msg.send(responseContainingAliases);
+    }
 
     setAlias = function(msg, robot){
         var options =  {
