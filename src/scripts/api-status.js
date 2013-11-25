@@ -13,6 +13,9 @@
 //   hubot status set alias <app> <server> <url> - Stores a new alias for the specified application
 //   hubot status clear alias <app> [<server] - Clears an alias
 //   hubot lbstatus <application> [<server>] - Returns lbstatus of the given application
+//
+// Author:
+//   andyroyle
 
 var Url = require('url'),
     aliases,
