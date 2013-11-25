@@ -1,5 +1,5 @@
 # Description:
-#   Display current puppetmaster node status
+#   Queries the puppetmaster radiator page for the latest node status
 #
 #
 # Commands:
