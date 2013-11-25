@@ -17,13 +17,6 @@
 //   hubot show me builds - Lists ALL running builds. I'm not sure how useful this is. May wish to delete
 //   hubot <tc build start|deploy> <alias> OR <buildType> - Kicks off a build in TeamCity
 //
-//   DEPRECATED - THOUGH ONLY TEMPORARILY
-//   hubot status <application> <monitor> [<server>] - Returns the current state of the given application
-//   hubot status show aliases - List all aliases
-//   hubot status set alias <app> <server> <url> - Stores a new alias for the specified application
-//   hubot status clear alias <app> [<server] - Clears an alias
-//   hubot lbstatus <application> [<server>] - Returns lbstatus of the given application
-//
 // Original Authors:
 //   Micah Martin and Jens Jahnke
 // Contributor:
