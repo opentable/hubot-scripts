@@ -30,9 +30,24 @@ module.exports = (robot) ->
       .get({'strictSSL': false}) (err, res, body) ->
         msg.send(body)
 
+  host = (msg, host) ->
+    msg.send(path)
+    msg.http("#{url}/#{host}/facts?format=json")
+      .headers
+        'Authorization': auth
+      .get({'strictSSL': false}) (err, res, body) ->
+        msg.send(body)
+
   robot.respond /foreman (hosts|environments|users|facts})/i, (msg) ->
     if msg.message.user.id is robot.name
       return
 
     hosts msg, msg.match[1], (text) ->
+      msg.send(text)
+
+  robot.respond /foreman (.*) facts/i, (msg) ->
+    if msg.message.user.id is robot.name
+      return
+
+    host msg, msg.match[1], (text) ->
       msg.send(text)
