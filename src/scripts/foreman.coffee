@@ -10,39 +10,41 @@
 #   HUBOT_FOREMAN_PASSWORD
 #
 # Commands:
-#   hubot foreman hosts - gets a list of hosts from foreman
+#   hubot foreman hosts        - gets a list of hosts from foreman
+#   hubot foreman environments - gets a lot of environments from foreman
+#   hubot foreman users        - gets a list of users from foreman
+#   hubot foreman facts        - gets a list of facts from foreman
+#   hubot foreman [HOST] facts - gets a list of hosts for a specific host
 #
 # Author:
 #   pstack
 
 module.exports = (robot) ->
 
-  user = process.env.HUBOT_FOREMAN_USER
-  password = process.env.HUBOT_FOREMAN_PASSWORD
-  url = process.env.HUBOT_FOREMAN_URL
-  auth = 'Basic ' + new Buffer("#{user}#{password}").toString('base64');
+  password = "0pentab1e"
+  url = "https://tyson"
+  user = "hubot"
+  auth = 'Basic ' + new Buffer("#{user}:#{password}").toString('base64')
 
-  hosts = (msg, path) ->
-    msg.send(path)
+  query = (msg, path) ->
     msg.http("#{url}/#{path}?format=json")
       .headers
         'Authorization': auth
-      .get({'strictSSL': false}) (err, res, body) ->
+      .request({rejectUnauthorized: false}) (err, res, body) ->
         msg.send(body)
 
   host = (msg, host) ->
-    msg.send(path)
     msg.http("#{url}/#{host}/facts?format=json")
-      .headers
+    .headers
         'Authorization': auth
-      .get({'strictSSL': false}) (err, res, body) ->
-        msg.send(body)
+    .request({rejectUnauthorized: false}) (err, res, body) ->
+      msg.send(body)
 
   robot.respond /foreman (hosts|environments|users|facts})/i, (msg) ->
     if msg.message.user.id is robot.name
       return
 
-    hosts msg, msg.match[1], (text) ->
+    query msg, msg.match[1], (text) ->
       msg.send(text)
 
   robot.respond /foreman (.*) facts/i, (msg) ->
