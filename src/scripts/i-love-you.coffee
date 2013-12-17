@@ -13,8 +13,8 @@
 
 module.exports = (robot) ->
 
-  robot.respond /i love you/i, (msg) ->
+  robot.respond /(.*) love(s?) you/i, (msg) ->
     if msg.message.user.id is robot.name
       return
 
-    msg.reply "I love you too http://thumbs.dreamstime.com/x/gold-robot-character-holding-heart-both-hands-create-d-humanoid-robot-series-30164419.jpg"
+    msg.reply "Right back at ya! http://thumbs.dreamstime.com/x/gold-robot-character-holding-heart-both-hands-create-d-humanoid-robot-series-30164419.jpg"
