@@ -3,6 +3,7 @@
 #
 # Commands:
 #   hubot whey-aye man
+#   hubot fog on the tyne
 #
 # Author:
 #  pstack
@@ -15,6 +16,7 @@ geordies = [
   "http://i2.cdnds.net/13/31/618x579/uktv-auf-wiedersehen-pet.jpg",
   "http://eil.com/images/main/Lindisfarne+-+Fog+On+The+Tyne+%5BRevisited%5D+-+5%22+CD+SINGLE-494879.jpg",
   "https://s3.amazonaws.com/uploads.hipchat.com/64658/539392/B3WShhDa0HOiKZ3/upload.png",
+  "http://i2.cdnds.net/11/17/reality_tv_geordie_shore_jay.jpg"
 ]
 
 module.exports = (robot) ->
