@@ -40,3 +40,9 @@ module.exports = (robot) ->
 
     #downtime msg, msg.match[1], msg.match[2] (text) ->
     msg.send("In Progress")
+
+  robot.respond /nagios dashboard/i, (msg) ->
+    if msg.message.user.id is robot.name
+      return
+
+    msg.send("Nagdash URL goes here")
