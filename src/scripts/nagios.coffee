@@ -1,10 +1,13 @@
 # Description:
-#   Interact with Nagios from Hubot
+#   Interact with Nagios from Hubot. Currently the script allows it to acknowledge issues, schedule downtime
+#   as well as turn notifications on / off.
+#   Lastly, this script will return the URL of Nagdash
 #
 # Commands:
 #   hubot nagios ack [host] [service] [server]
 #   hubot nagios notifications [on|off] [name] [hostgroup|servicegroup|host)
 #   hubot nagios downtime [host] [time (in minutes)]
+#   hubot nagios dashboard
 #
 # Author:
 #   pstack
