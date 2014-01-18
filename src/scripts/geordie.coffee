@@ -23,3 +23,6 @@ module.exports = (robot) ->
 
   robot.respond /(whey-aye man|fog on the tyne)/i, (msg) ->
     msg.send msg.random geordies
+
+  robot.respond /(what is ryan saying?)/i, (msg) ->
+    msg.send "We need to get some subtitles for Ryan"
