@@ -102,7 +102,7 @@ buildversion = function(msg){
 
     validateRequest(bits, msg, function(){
         for(var i=0; i<bits.server.length; i++){
-            sendRequest(buildUrl(bits.app, '/service-status/BuildVersion', bits.server[i]), msg, bits.server[i], function(message, servername){
+            sendMessageRequest(buildUrl(bits.app, '/service-status/BuildVersion', bits.server[i]), msg, bits.server[i], function(message, servername){
                 if(!message){
                     return invalidResponse(msg);
                 }
@@ -146,6 +146,23 @@ sendRequest = function(url, msg, servername, cb){
           return;
       }
       cb(json.Status || json.status, servername);
+    });
+},
+
+sendMessageRequest = function(url, msg, servername, cb){
+    logger.info(url);
+    msg.http(url)
+        .get()(function(err, res, body){
+        var json;
+        try{
+            json = JSON.parse(body);
+        }
+        catch(exception){
+            logger.warning("response was not json, returning as raw");
+            cb(body, servername);
+            return;
+        }
+        cb(json.Status || json.message, servername);
     });
 },
 
