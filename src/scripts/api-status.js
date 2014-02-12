@@ -13,6 +13,7 @@
 //   hubot status set alias <app> <server> <url> - Stores a new alias for the specified application
 //   hubot status clear alias <app> [<server] - Clears an alias
 //   hubot lbstatus <application> [<server>] - Returns lbstatus of the given application
+//   hubot buildversion <application> [server>] - Returns the BuildVersion from the service-status page
 //
 // Author:
 //   andyroyle
@@ -46,6 +47,10 @@ module.exports = function(robot){
 
   robot.respond(/lbstatus ((?![show|set|clear])|\S+)(?:\s)?(\S+)?$/i, function(msg){
     lbstatus(msg);
+  });
+
+  robot.respond(/buildversion (\S+) (\S+)?$/i, function(msg){
+    buildversion(msg);
   });
 };
 
@@ -84,6 +89,24 @@ lbstatus = function(msg){
                     return invalidResponse(msg);
                 }
                 msg.send(bits.app + " " + servername + ", Current Status: " + status);
+            });
+        }
+    });
+},
+
+buildversion = function(msg){
+    var bits = {
+        app: msg.match[1],
+        server: msg.match[2]
+    };
+
+    validateRequest(bits, msg, function(){
+        for(var i=0; i<bits.server.length; i++){
+            sendRequest(buildUrl(bits.app, '/service-status/BuildVersion', bits.server[i]), msg, bits.server[i], function(message, servername){
+                if(!message){
+                    return invalidResponse(msg);
+                }
+                msg.send(bits.app + " " + servername + ", BuildVersion: " + message);
             });
         }
     });
