@@ -162,7 +162,7 @@ sendMessageRequest = function(url, msg, servername, cb){
             cb(body, servername);
             return;
         }
-        cb(json.Status || json.message, servername);
+        cb(json.Message || json.message, servername);
     });
 },
 
