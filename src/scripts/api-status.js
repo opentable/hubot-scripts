@@ -49,7 +49,7 @@ module.exports = function(robot){
     lbstatus(msg);
   });
 
-  robot.respond(/buildversion ((?![show|set|clear])|\S+)(?:\s)?(\S+)?$/i, function(msg){
+  robot.respond(/buildversion (\S+) (\S+)?$/i, function(msg){
     buildversion(msg);
   });
 };
