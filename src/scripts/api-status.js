@@ -106,7 +106,7 @@ buildversion = function(msg){
                 if(!message){
                     return invalidResponse(msg);
                 }
-                msg.send(bits.app + " " + servername + ", BuildVersion: " + message);
+                msg.send(bits.app + " " + servername + ", " + message);
             });
         }
     });
