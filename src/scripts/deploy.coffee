@@ -11,7 +11,7 @@
 #   None
 #
 # URLs:
-#   GET /hubot/deploy?environment=<environment>&project=<project>[&version=<version>]
+#   GET /hubot/deploy?environment=<environment>&project=<project>[&version=<version>][&room=<room>]
 #   GET /hubot/deploy?hosts=<hosts>&wars=<wars>[&version=<version>]
 #
 #   wars is a comma seperated list
@@ -34,7 +34,7 @@ module.exports = (robot) ->
     version = query.version if query.version
 
     user = {}
-    user.room = process.env.HUBOT_DEPLOY_ROOM
+    user.room = query.room || process.env.HUBOT_DEPLOY_ROOM
 
     message = "DEPLOY: " + project + " was deployed to " + environment
     message += " version " + version if version
@@ -54,7 +54,7 @@ module.exports = (robot) ->
     version = query.version if query.version
 
     user = {}
-    user.room = process.env.HUBOT_DEPLOY_ROOM
+    user.room = query.room || process.env.HUBOT_DEPLOY_ROOM
     user.type = "PasteMessage"
 
     hosta=hosts.split(",")
