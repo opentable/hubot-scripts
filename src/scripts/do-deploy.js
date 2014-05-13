@@ -82,21 +82,21 @@ module.exports = function (robot) {
 
 var doDeploy = function (msg) {
 
-        var app = msg.match[1];
-        var alias = aliases[app];
+        var alias = msg.match[1];
+        var app = aliases[alias];
 
-        if (!alias) {
-            logger.error("No such application");
+        if (!app) {
+            msg.send("No app with alias: " + alias);
             return;
         }
 
-        getBuilds(msg, alias.mainBuildTypeId, devTeamCity)
+        getBuilds(msg, app.mainBuildTypeId, devTeamCity)
             .then(validateLastBuildIsSuccessful)
             .then(function(lastSuccessfulBuildId){
                 return getBuildInfo(msg, lastSuccessfulBuildId, devTeamCity);
             })
             .then(function(lastSuccessfulBuild) {
-                return pinAndTrigger(msg, lastSuccessfulBuild, alias.deployBuildTypeId, prodTeamCity);
+                return pinAndTrigger(msg, lastSuccessfulBuild, app.deployBuildTypeId, prodTeamCity);
             })
             .catch(function(err){
                 msg.send("There was an error. " + err);
@@ -105,15 +105,15 @@ var doDeploy = function (msg) {
     },
 
     showLastSuccessfulBuild = function (msg) {
-        var app = msg.match[1];
-        var alias = aliases[app];
+        var alias = msg.match[1];
+        var app = aliases[alias];
 
-        if (!alias) {
-            logger.error("No such application");
+        if (!app) {
+            msg.send("No app with alias: " + alias);
             return;
         }
 
-        getBuilds(msg, alias.mainBuildTypeId, devTeamCity)
+        getBuilds(msg, app.mainBuildTypeId, devTeamCity)
             .then(function (builds) {
                 var lastBuild = builds[0];
                 msg.send(util.format("Last build: %s [%s]", lastBuild.number, lastBuild.status));
@@ -130,20 +130,20 @@ var doDeploy = function (msg) {
                 }
             })
             .catch(function(err){
-                msg.send("An error occured:" + err);
+                msg.send("An error occurred:" + err);
             });
     },
 
     showLastSuccessfulDeploy = function(msg){
-        var app = msg.match[1];
-        var alias = aliases[app];
+        var alias = msg.match[1];
+        var app = aliases[alias];
 
-        if (!alias) {
-            logger.error("No such application");
+        if (!app) {
+            msg.send("No app with alias: " + alias);
             return;
         }
 
-        getBuilds(msg, alias.deployBuildTypeId, prodTeamCity)
+        getBuilds(msg, app.deployBuildTypeId, prodTeamCity)
             .then(function(builds){
                 var lastSuccessful = _.find(builds, function (x) { return x.status === "SUCCESS"; });
 
@@ -274,7 +274,7 @@ var doDeploy = function (msg) {
                     deferred.reject(new Error(res.statusCode + " status code when triggering build. Body: " + body));
                 }
                 else {
-                    msg.send("Pinned and triggered successfully");
+                    msg.send("Successfully triggered deployment");
                     deferred.resolve();
                 }
         });
@@ -299,28 +299,28 @@ var doDeploy = function (msg) {
 
     setAlias = function (msg, robot) {
         var bits = {
-            app: msg.match[1],
+            alias: msg.match[1],
             mainBuildTypeId: msg.match[2],
             deployBuildTypeId: msg.match[3]
         };
 
         // todo: validate build type ids
 
-        if (!aliases[bits.app]) {
-            aliases[bits.app] = {};
+        if (!aliases[bits.alias]) {
+            aliases[bits.alias] = {};
         }
 
-        aliases[bits.app] = { mainBuildTypeId: bits.mainBuildTypeId, deployBuildTypeId: bits.deployBuildTypeId };
+        aliases[bits.alias] = { mainBuildTypeId: bits.mainBuildTypeId, deployBuildTypeId: bits.deployBuildTypeId };
         robot.brain.data.deploymentAliases = aliases;
 
-        msg.send('Ok, alias for ' + bits.app + ' was set');
+        msg.send('Ok, alias for ' + bits.alias + ' was set');
     },
 
     clearAlias = function (msg, robot) {
-        var app = msg.match[1];
+        var alias = msg.match[1];
 
-        delete aliases[app];
+        delete aliases[alias];
         robot.brain.data.deploymentAliases = aliases;
 
-        msg.send('Ok, alias for ' + app + ' was cleared');
+        msg.send('Ok, alias for ' + alias + ' was cleared');
     };
