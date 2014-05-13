@@ -3,6 +3,8 @@
 //
 // Dependencies:
 //   Underscore
+//   Q
+//   Util
 //
 // Configuration:
 //   HUBOT_TEAMCITY_DEV_USERNAME
@@ -13,6 +15,7 @@
 //   HUBOT_TEAMCITY_PROD_HOSTNAME
 //
 // Commands:
+//   hubot deploy <app alias> - Deploys app by pinning last successful build then triggering the deploy 'build'
 //   hubot status show aliases - List all aliases
 //   hubot status set alias <app alias> <dev build type id> <deploy build type id> - Sets an alias
 //   hubot status clear aliases <app alias> - Clears an alias
