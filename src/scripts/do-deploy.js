@@ -24,17 +24,20 @@
 
 var _ = require('underscore'),
     q = require('q'),
+    util = require('util'),
     aliases,
     logger,
     devTeamCity = {
-        restUrl: "http://" + process.env.HUBOT_TEAMCITY_DEV_HOSTNAME + "/httpAuth/app/rest/",
+        restUrl:  util.format("http://%s/httpAuth/app/rest/", process.env.HUBOT_TEAMCITY_DEV_HOSTNAME),
+        host: process.env.HUBOT_TEAMCITY_DEV_HOSTNAME,
         user: process.env.HUBOT_TEAMCITY_DEV_USERNAME,
         password: process.env.HUBOT_TEAMCITY_DEV_PASSWORD
     },
     prodTeamCity = {
-        restUrl: "http://" + process.env.HUBOT_TEAMCITY_PROD_HOSTNAME + "/httpAuth/app/rest/",
+        restUrl: util.format("http://%s/httpAuth/app/rest/", process.env.HUBOT_TEAMCITY_PROD_HOSTNAME),
+        host: process.env.HUBOT_TEAMCITY_PROD_HOSTNAME,
         user: process.env.HUBOT_TEAMCITY_PROD_USERNAME,
-        password: process.env.HUBOT_TEAMCITY_PROD_PASSWORD,
+        password: process.env.HUBOT_TEAMCITY_PROD_PASSWORD
     };
 
 module.exports = function (robot) {
@@ -95,9 +98,7 @@ var doDeploy = function (msg) {
             .catch(function(err){
                 msg.send("There was an error. " + err);
             })
-            .done(function(){
-                msg.send("Pinned and triggered deployment successfully")
-            });
+            .done();
     },
 
     showLastSuccessfulBuild = function (msg) {
@@ -112,7 +113,7 @@ var doDeploy = function (msg) {
         getBuilds(msg, alias.mainBuildTypeId, devTeamCity)
             .then(function (builds) {
                 var lastBuild = builds[0];
-                msg.send("Last build: " + lastBuild.number + " Status: " + lastBuild.status);
+                msg.send(util.format("Last build: %s [%s]", lastBuild.number, lastBuild.status));
 
                 if (lastBuild.status !== "SUCCESS") {
                     var lastSuccessful = _.find(builds, function (x) { return x.status === "SUCCESS"; });
@@ -158,7 +159,7 @@ var doDeploy = function (msg) {
     getBuilds = function (msg, buildTypeId, teamCityConfig) {
         var deferred = q.defer();
 
-        var buildsUrl = teamCityConfig.restUrl +  "buildTypes/id:" + buildTypeId + "/builds";
+        var buildsUrl = util.format("%sbuildTypes/id:%s/builds", teamCityConfig.restUrl, buildTypeId);
         logger.info("Getting builds from: " + buildsUrl);
 
         msg.http(buildsUrl)
@@ -181,7 +182,7 @@ var doDeploy = function (msg) {
     getBuildInfo = function (msg, buildId, teamCityConfig, callback, errorCallback) {
         var deferred = q.defer();
 
-        var buildUrl = teamCityConfig.restUrl + "builds/" + buildId;
+        var buildUrl = util.format("%sbuilds/%s", teamCityConfig.restUrl, buildId);
         logger.info("Getting build info from: " + buildUrl);
 
         msg.http(buildUrl)
@@ -252,23 +253,17 @@ var doDeploy = function (msg) {
     triggerBuild = function (msg, buildTypeId, teamCityConfig) {
         var deferred = q.defer();
 
-        var buildQueueUrl = teamCityConfig.restUrl + "buildQueue";
-        var postData = JSON.stringify({
-            build: {
-                buildType: {
-                    id: buildTypeId
-                }
-            }
-        });
-        logger.info("Trigger build on: " + buildQueueUrl + " with POST data: " + postData);
+        // There is a better way to do this if we had TC 8.1 onwards (see git commit history for REST version)
+        var triggerBuildUrl = util.format("http://%s:%s@%s/httpAuth/action.html?add2Queue=%s",
+            teamCityConfig.user, teamCityConfig.password, teamCityConfig.host, buildTypeId);
+        logger.info("Triggering build with GET: " + triggerBuildUrl);
 
-        msg.http(buildQueueUrl)
+        msg.http(triggerBuildUrl)
             .headers({
                 Accept: 'application/json',
-                "Content-Type": 'application/json',
                 Authorization: getAuthHeader(teamCityConfig)
             })
-            .post(postData)(function (err, res, body) {
+            .get()(function (err, res, body) {
                 if (err) {
                     deferred.reject(err);
                 }
@@ -276,6 +271,7 @@ var doDeploy = function (msg) {
                     deferred.reject(new Error(res.statusCode + " status code when triggering build. Body: " + body));
                 }
                 else {
+                    msg.send("Pinned and triggered successfully");
                     deferred.resolve();
                 }
         });
