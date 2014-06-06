@@ -50,6 +50,11 @@ module.exports = function (robot) {
         aliases = robot.brain.data.deploymentAliases || {};
     });
 
+    robot.respond(/deployment roulette/i, function (msg) {
+        msg.send("Are you feeling lucky?");
+        doDeploy(doRandomDeploy(msg));
+    });
+
     robot.respond(/deploy (\S+)$/i, function (msg) {
         doDeploy(msg);
     });
@@ -324,4 +329,23 @@ var doDeploy = function (msg) {
         robot.brain.data.deploymentAliases = aliases;
 
         msg.send('Ok, alias for ' + alias + ' was cleared');
+    },
+
+    doRandomDeploy = function(msg){
+        var keys = Object.keys(aliases);
+        var r = parseInt(Math.random() * 10) % keys.length;
+        var app = aliases[keys[r]];
+
+        getBuilds(msg, app.mainBuildTypeId, devTeamCity)
+            .then(validateLastBuildIsSuccessful)
+            .then(function(lastSuccessfulBuildId){
+                return getBuildInfo(msg, lastSuccessfulBuildId, devTeamCity);
+            })
+            .then(function(lastSuccessfulBuild) {
+                return pinAndTrigger(msg, lastSuccessfulBuild, app.deployBuildTypeId, prodTeamCity);
+            })
+            .catch(function(err){
+                msg.send("There was an error. " + err);
+            })
+            .done();
     };
