@@ -84,6 +84,7 @@ var doDeploy = function (msg) {
 
         var alias = msg.match[1];
         var app = aliases[alias];
+        msg.alias = alias;
 
         if (!app) {
             msg.send("No app with alias: " + alias);
@@ -274,7 +275,7 @@ var doDeploy = function (msg) {
                     deferred.reject(new Error(res.statusCode + " status code when triggering build. Body: " + body));
                 }
                 else {
-                    msg.send("Successfully triggered deployment");
+                    msg.send("Successfully triggered deployment for " + msg.alias);
                     deferred.resolve();
                 }
         });
