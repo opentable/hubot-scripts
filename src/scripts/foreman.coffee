@@ -10,46 +10,29 @@
 #   HUBOT_FOREMAN_PASSWORD
 #
 # Commands:
-#   hubot foreman hosts        - gets a list of hosts from foreman
-#   hubot foreman environments - gets a lot of environments from foreman
-#   hubot foreman users        - gets a list of users from foreman
-#   hubot foreman facts        - gets a list of facts from foreman
-#   hubot foreman [HOST] facts - gets a list of hosts for a specific host
+#   hubot foreman build <role> <multiplier>
+#   hubot foreman destroy <node>
+#   hubot foreman set role <role> <spec>
+#   hubot foreman list roles
 #
 # Author:
 #   pstack
 
 module.exports = (robot) ->
 
-  password = "0pentab1e"
-  url = "https://tyson"
-  user = "hubot"
+  password = ""
+  url = ""
+  user = ""
   auth = 'Basic ' + new Buffer("#{user}:#{password}").toString('base64')
 
-  query = (msg, path) ->
-    msg.http("#{url}/#{path}?format=json")
-      .headers
-        'Authorization': auth
-      .request({rejectUnauthorized: false}) (err, res, body) ->
-        msg.send(body)
+  robot.respond /foreman build (.*)( .*)?/i, (msg) ->
+    msg.send("This would build some boxes")
 
-  host = (msg, host) ->
-    msg.http("#{url}/#{host}/facts?format=json")
-    .headers
-        'Authorization': auth
-    .request({rejectUnauthorized: false}) (err, res, body) ->
-      msg.send(body)
+  robot.respond /foreman destroy (.*)/i, (msg) ->
+    msg.send("This would destroy a box")
 
-  robot.respond /foreman (hosts|environments|users|facts})/i, (msg) ->
-    if msg.message.user.id is robot.name
-      return
+  robot.respond /foreman set role (.*) (.*)/i, (msg) ->
+    msg.send("This will set up role specifics")
 
-    query msg, msg.match[1], (text) ->
-      msg.send(text)
-
-  robot.respond /foreman (.*) facts/i, (msg) ->
-    if msg.message.user.id is robot.name
-      return
-
-    host msg, msg.match[1], (text) ->
-      msg.send(text)
+  robot.respond /foreman list roles/i, (msg) ->
+    msg.send("This would list all the box types")
