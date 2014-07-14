@@ -9,7 +9,6 @@
 #   None
 #
 # Configuration:
-#   HUBOT_ROOM_TO_RECEIVE_TEAM_CITY_BUILD_RESULTS
 #
 # Commands:
 #   None
@@ -23,13 +22,10 @@
 
 Robot = require('hubot').Robot
 
-room = process.env.HUBOT_ROOM_TO_RECEIVE_TEAM_CITY_BUILD_RESULTS
-unless room
-  throw "Need a room to send build status messages to once we receive the web hook call"
 module.exports = (robot)->
   robot.router.post "/hubot/build/", (req, res)->
     user = robot.brain.userForId 'broadcast'
-    user.room = req.query.room or room
+    user.room = req.query.room 
     user.type = 'groupchat'
     build = req.body.build
 
