@@ -29,16 +29,6 @@ module.exports = (robot)->
     user.type = 'groupchat'
     build = req.body.build
 
-    robot.send user, "#{build.message} and ran on agent:#{build.agentName}"
-
-    soundToPlay = 'http://soundfxnow.com/soundfx/Human-Cheer-SmallCrowd01.mp3'
-
-    if build.buildResult == 'failure'
-      failList = ["dog", "cat", "baby"]
-      soundToPlay = 'http://soundfxnow.com/soundfx/Sad-Trombone.mp3'
-      message = 'bing image fail ' + failList[Math.floor(Math.random() * failList.length)]
-      robot.receive new Robot.TextMessage user, message
-
-    robot.receive new Robot.TextMessage user, "hubot sound #{soundToPlay}"
+    robot.send user, "#{build.message} and ran on agent: #{build.agentName}, status: #{build.buildResult}"
 
     res.end "that tickles:" + process.env.PORT
