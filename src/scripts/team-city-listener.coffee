@@ -23,7 +23,7 @@
 Robot = require('hubot').Robot
 
 module.exports = (robot)->
-  robot.router.post "/hubot/build/", (req, res)->
+  robot.router.post "/hubot/build", (req, res)->
     user = robot.brain.userForId 'broadcast'
     user.room = req.query.room 
     user.type = 'groupchat'
