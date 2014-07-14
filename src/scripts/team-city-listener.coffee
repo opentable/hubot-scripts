@@ -29,7 +29,7 @@ unless room
 module.exports = (robot)->
   robot.router.post "/hubot/build/", (req, res)->
     user = robot.brain.userForId 'broadcast'
-    user.room = room
+    user.room = req.query.room or room
     user.type = 'groupchat'
     build = req.body.build
 
