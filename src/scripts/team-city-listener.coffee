@@ -29,6 +29,6 @@ module.exports = (robot)->
     user.type = 'groupchat'
     build = req.body.build
 
-    robot.send user, "#{build.message} and ran on agent: #{build.agentName}, status: #{build.buildResult}"
+    robot.send user, "#{build.message} ran on agent: #{build.agentName}, status: #{build.buildResult}, #{build.buildStatusUrl}"
 
     res.end "that tickles:" + process.env.PORT
