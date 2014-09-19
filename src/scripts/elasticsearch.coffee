@@ -69,8 +69,6 @@ module.exports = (robot) ->
     cluster_health msg, msg.match[1], (text) ->
       msg.send text
 
-
-
   robot.respond /(elasticsearch|es) show aliases/i, (msg) ->
     if msg.message.user.id is robot.name
       return
@@ -106,5 +104,5 @@ module.exports = (robot) ->
 
   setAlias = (msg, alias, url) ->
     _esAliases[alias] = url
-    robot.brain.data._esAliases = _esAliases
+    robot.brain.data.elasticsearch_aliases = _esAliases
     msg.send("The alias #{alias} for #{url} has been added to the brain")
