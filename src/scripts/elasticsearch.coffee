@@ -2,12 +2,12 @@
 #   Get ElasticSearch Cluster Information
 #
 # Commands:
-#   hubot: elasticsearch|es cluster [server] - Gets the cluster information for the given server
+#   hubot: elasticsearch cluster [server] - Gets the cluster information for the given server or alias
 #   hubot: elasticsearch node [server] - Gets the node information for the given server
 #   hubot: elasticsearch query [server] [query] - Runs a specific query against an ElasticSearch cluster
-#   hubot: elasticsearch|es show aliases - shows the aliases for the list of ElasticSearch instances
-#   hubot: elasticsearch|es add alias [alias name] [url] - sets the alias for a given url
-#   hubot: elasticsearch|es clear alias [alias name] - please note that this needs to include any port numbers as appropriate
+#   hubot: elasticsearch show aliases - shows the aliases for the list of ElasticSearch instances
+#   hubot: elasticsearch add alias [alias name] [url] - sets the alias for a given url
+#   hubot: elasticsearch clear alias [alias name] - please note that this needs to include any port numbers as appropriate
 #
 # Notes:
 #   The server must be a fqdn (with the port!) to get to the elasticsearch cluster
@@ -66,32 +66,32 @@ module.exports = (robot) ->
     node_health msg, msg.match[1], (text) ->
       msg.send text
 
-  robot.hear /(elasticsearch|es) cluster (.*)/i, (msg) ->
+  robot.hear /elasticsearch cluster (.*)/i, (msg) ->
     if msg.message.user.id is robot.name
       return
 
-    cluster_health msg, msg.match[2], (text) ->
+    cluster_health msg, msg.match[1], (text) ->
       msg.send text
 
-  robot.hear /(elasticsearch|es) show aliases/i, (msg) ->
+  robot.hear /elasticsearch show aliases/i, (msg) ->
     if msg.message.user.id is robot.name
       return
 
     showAliases msg, (text) ->
       msg.send(text)
 
-  robot.hear /(elasticsearch|es) add alias (.*) (.*)/i, (msg) ->
+  robot.hear /elasticsearch add alias (.*) (.*)/i, (msg) ->
     if msg.message.user.id is robot.name
       return
 
-    setAlias msg, msg.match[2], msg.match[3], (text) ->
+    setAlias msg, msg.match[1], msg.match[2], (text) ->
       msg.send(text)
 
-  robot.hear /(elasticsearch|es) clear alias (.*)/i, (msg) ->
+  robot.hear /elasticsearch clear alias (.*)/i, (msg) ->
     if msg.message.user.id is robot.name
       return
 
-    clearAlias msg, msg.match[2], (text) ->
+    clearAlias msg, msg.match[1], (text) ->
       msg.send(text)
 
   showAliases = (msg) ->
