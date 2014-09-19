@@ -2,7 +2,7 @@
 #   Get ElasticSearch Cluster Information
 #
 # Commands:
-#   hubot: elasticsearch cluster [server] - Gets the cluster information for the given server
+#   hubot: elasticsearch|es cluster [server] - Gets the cluster information for the given server
 #   hubot: elasticsearch node [server] - Gets the node information for the given server
 #   hubot: elasticsearch query [server] [query] - Runs a specific query against an ElasticSearch cluster
 #   hubot: elasticsearch|es show aliases - shows the aliases for the list of ElasticSearch instances
@@ -30,14 +30,19 @@ module.exports = (robot) ->
         firsthit = JSON.stringify(json.hits.hits[0])
         msg.send("There are #{json.hits.total} results for the search http://#{server}/_search?#{query} \nThe first result is \n#{firsthit}")
 
-  cluster_health = (msg, server) ->
-    msg.http("http://#{server}/_cluster/health")
-      .get() (err, res, body) ->
-        json = JSON.parse(body)
-        cluster_name = json['cluster']
-        status = json['status']
-        number_of_nodes = json['number_of_nodes']
-        msg.send "Cluster: #{cluster_name} \nStatus: #{status} \n Nodes: #{number_of_nodes}"
+  cluster_health = (msg, alias) ->
+    cluster_url = _esAliases[alias]
+
+    if cluster_url == "" || cluster_url == undefined
+      msg.send("No ES Cluster found for #{alias}")
+    else
+      msg.http("#{cluster_url}/_cluster/health")
+        .get() (err, res, body) ->
+          json = JSON.parse(body)
+          cluster_name = json['cluster']
+          status = json['status']
+          number_of_nodes = json['number_of_nodes']
+          msg.send "Cluster: #{cluster_name} \nStatus: #{status} \n Nodes: #{number_of_nodes}"
 
   node_health = (msg, server) ->
     msg.http("http://#{server}/")
@@ -54,7 +59,6 @@ module.exports = (robot) ->
     search msg, msg.match[1], msg.match[2], (text) ->
       msg.send(text)
 
-
   robot.respond /elasticsearch node (.*)/i, (msg) ->
     if msg.message.user.id is robot.name
       return
@@ -62,47 +66,48 @@ module.exports = (robot) ->
     node_health msg, msg.match[1], (text) ->
       msg.send text
 
-  robot.respond /elasticsearch cluster (.*)/i, (msg) ->
+  robot.hear /(elasticsearch|es) cluster (.*)/i, (msg) ->
     if msg.message.user.id is robot.name
       return
 
-    cluster_health msg, msg.match[1], (text) ->
+    cluster_health msg, msg.match[2], (text) ->
       msg.send text
 
-  robot.respond /(elasticsearch|es) show aliases/i, (msg) ->
+  robot.hear /(elasticsearch|es) show aliases/i, (msg) ->
     if msg.message.user.id is robot.name
       return
 
     showAliases msg, (text) ->
       msg.send(text)
 
-  robot.respond /(elasticsearch|es) add alias (.*) (.*)/i, (msg) ->
+  robot.hear /(elasticsearch|es) add alias (.*) (.*)/i, (msg) ->
     if msg.message.user.id is robot.name
       return
 
-    setAlias msg, msg.match[1], msg.match[2], (text) ->
+    setAlias msg, msg.match[2], msg.match[3], (text) ->
       msg.send(text)
 
-  robot.respond /(elasticsearch|es) clear alias (.*)/i, (msg) ->
+  robot.hear /(elasticsearch|es) clear alias (.*)/i, (msg) ->
     if msg.message.user.id is robot.name
       return
 
-    clearAlias msg, msg.match[1], (text) ->
+    clearAlias msg, msg.match[2], (text) ->
       msg.send(text)
 
   showAliases = (msg) ->
-    if _esAliases?
+
+    if _esAliases == null
       msg.send("I cannot find any ElasticSearch Cluster aliases")
     else
       for alias of _esAliases
-        msg.send("I found '#{alias}' as an alias for #{_esAliases[alias]}")
+        msg.send("I found '#{alias}' as an alias for the cluster: #{_esAliases[alias]}")
 
   clearAlias = (msg, alias) ->
     delete _esAliases[alias]
-    robot.brain.data._esAliases = _esAliases
-    msg.send("The alias #{alias} has been removed")
+    robot.brain.data.elasticsearch_aliases = _esAliases
+    msg.send("The cluster alias #{alias} has been removed")
 
   setAlias = (msg, alias, url) ->
     _esAliases[alias] = url
     robot.brain.data.elasticsearch_aliases = _esAliases
-    msg.send("The alias #{alias} for #{url} has been added to the brain")
+    msg.send("The cluster alias #{alias} for #{url} has been added to the brain")
