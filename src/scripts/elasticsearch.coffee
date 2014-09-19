@@ -23,12 +23,12 @@ module.exports = (robot) ->
     if robot.brain.data.elasticsearch_aliases?
       _esAliases = robot.brain.data.elasticsearch_aliases
 
-  search = (msg, server, query) ->
-    msg.http("http://#{server}/_search?#{query}")
-      .get() (err, res, body) ->
-        json = JSON.parse(body)
-        firsthit = JSON.stringify(json.hits.hits[0])
-        msg.send("There are #{json.hits.total} results for the search http://#{server}/_search?#{query} \nThe first result is \n#{firsthit}")
+  # search = (msg, server, query) ->
+  #   msg.http("http://#{server}/_search?#{query}")
+  #     .get() (err, res, body) ->
+  #       json = JSON.parse(body)
+  #       firsthit = JSON.stringify(json.hits.hits[0])
+  #       msg.send("There are #{json.hits.total} results for the search http://#{server}/_search?#{query} \nThe first result is \n#{firsthit}")
 
   cluster_health = (msg, alias) ->
     cluster_url = _esAliases[alias]
@@ -42,28 +42,46 @@ module.exports = (robot) ->
           cluster_name = json['cluster']
           status = json['status']
           number_of_nodes = json['number_of_nodes']
-          msg.send "Cluster: #{cluster_name} \nStatus: #{status} \n Nodes: #{number_of_nodes}"
+          msg.send "Cluster: #{cluster_url} \nStatus: #{status} \n Nodes: #{number_of_nodes}"
 
-  node_health = (msg, server) ->
-    msg.http("http://#{server}/")
-      .get() (err, res, body) ->
-        json = JSON.parse(body)
-        name = json['name']
-        status = json['status']
-        msg.send "Server: #{name} \nStatus: #{status}"
+  cat_nodes = (msg, alias) ->
+    cluster_url = _esAliases[alias]
 
-  robot.respond /elasticsearch query (.*) (.*)/i, (msg) ->
+    if cluster_url == "" || cluster_url == undefined
+      msg.send("No ES Cluster found for #{alias}")
+    else
+      msg.send("Getting the cat stats for the cluster: #{cluster_url}")
+      msg.http("#{cluster_url}/_cat/nodes?h=host,heapPercent,load,segmentsMemory,fielddataMemory,filterCacheMemory,idCacheMemory,percolateMemory,u,heapMax,nodeRole,master")
+        .get() (err, res, body) ->
+          msg.send(body)
+
+  # node_health = (msg, server) ->
+  #   msg.http("http://#{server}/")
+  #     .get() (err, res, body) ->
+  #       json = JSON.parse(body)
+  #       name = json['name']
+  #       status = json['status']
+  #       msg.send "Server: #{name} \nStatus: #{status}"
+
+  # robot.respond /elasticsearch query (.*) (.*)/i, (msg) ->
+  #   if msg.message.user.id is robot.name
+  #     return
+  #
+  #   search msg, msg.match[1], msg.match[2], (text) ->
+  #     msg.send(text)
+  #
+  # robot.respond /elasticsearch node (.*)/i, (msg) ->
+  #   if msg.message.user.id is robot.name
+  #     return
+  #
+  #   node_health msg, msg.match[1], (text) ->
+  #     msg.send text
+
+  robot.hear /elasticsearch cat nodes (.*)/i, (msg) ->
     if msg.message.user.id is robot.name
       return
 
-    search msg, msg.match[1], msg.match[2], (text) ->
-      msg.send(text)
-
-  robot.respond /elasticsearch node (.*)/i, (msg) ->
-    if msg.message.user.id is robot.name
-      return
-
-    node_health msg, msg.match[1], (text) ->
+    cat_nodes msg, msg.match[1], (text) ->
       msg.send text
 
   robot.hear /elasticsearch cluster (.*)/i, (msg) ->
