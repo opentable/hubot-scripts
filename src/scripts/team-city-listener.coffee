@@ -9,7 +9,6 @@
 #   None
 #
 # Configuration:
-#   HUBOT_ROOM_TO_RECEIVE_TEAM_CITY_BUILD_RESULTS
 #
 # Commands:
 #   None
@@ -23,26 +22,13 @@
 
 Robot = require('hubot').Robot
 
-room = process.env.HUBOT_ROOM_TO_RECEIVE_TEAM_CITY_BUILD_RESULTS
-unless room
-  throw "Need a room to send build status messages to once we receive the web hook call"
 module.exports = (robot)->
-  robot.router.post "/hubot/build/", (req, res)->
+  robot.router.post "/hubot/build", (req, res)->
     user = robot.brain.userForId 'broadcast'
-    user.room = room
+    user.room = req.query.room 
     user.type = 'groupchat'
     build = req.body.build
 
-    robot.send user, "#{build.message} and ran on agent:#{build.agentName}"
-
-    soundToPlay = 'http://soundfxnow.com/soundfx/Human-Cheer-SmallCrowd01.mp3'
-
-    if build.buildResult == 'failure'
-      failList = ["dog", "cat", "baby"]
-      soundToPlay = 'http://soundfxnow.com/soundfx/Sad-Trombone.mp3'
-      message = 'bing image fail ' + failList[Math.floor(Math.random() * failList.length)]
-      robot.receive new Robot.TextMessage user, message
-
-    robot.receive new Robot.TextMessage user, "hubot sound #{soundToPlay}"
+    robot.send user, "#{build.message} ran on agent: #{build.agentName}, #{build.buildStatusUrl}"
 
     res.end "that tickles:" + process.env.PORT
