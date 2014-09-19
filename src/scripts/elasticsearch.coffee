@@ -105,6 +105,6 @@ module.exports = (robot) ->
     msg.send("The alias #{alias} has been removed")
 
   setAlias = (msg, alias, url) ->
-    _nagiosAliases[alias] = url
+    _esAliases[alias] = url
     robot.brain.data._esAliases = _esAliases
     msg.send("The alias #{alias} for #{url} has been added to the brain")
