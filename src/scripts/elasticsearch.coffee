@@ -5,6 +5,9 @@
 #   hubot: elasticsearch cluster [server] - Gets the cluster information for the given server
 #   hubot: elasticsearch node [server] - Gets the node information for the given server
 #   hubot: elasticsearch query [server] [query] - Runs a specific query against an ElasticSearch cluster
+#   hubot: elasticsearch|es show aliases - shows the aliases for the list of ElasticSearch instances
+#   hubot: elasticsearch|es add alias [alias name] [url] - sets the alias for a given url
+#   hubot: elasticsearch|es clear alias [alias name] - please note that this needs to include any port numbers as appropriate
 #
 # Notes:
 #   The server must be a fqdn (with the port!) to get to the elasticsearch cluster
@@ -66,7 +69,7 @@ module.exports = (robot) ->
     cluster_health msg, msg.match[1], (text) ->
       msg.send text
 
-      
+
 
   robot.respond /(elasticsearch|es) show aliases/i, (msg) ->
     if msg.message.user.id is robot.name
