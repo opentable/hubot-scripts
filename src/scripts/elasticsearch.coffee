@@ -12,8 +12,13 @@
 # Author:
 #  Paul Stack
 
+_esAliases = {}
 
 module.exports = (robot) ->
+
+  robot.brain.on 'loaded', ->
+    if robot.brain.data.elasticsearch_aliases?
+      _esAliases = robot.brain.data.elasticsearch_aliases
 
   search = (msg, server, query) ->
     msg.http("http://#{server}/_search?#{query}")
@@ -60,3 +65,43 @@ module.exports = (robot) ->
 
     cluster_health msg, msg.match[1], (text) ->
       msg.send text
+
+      
+
+  robot.respond /(elasticsearch|es) show aliases/i, (msg) ->
+    if msg.message.user.id is robot.name
+      return
+
+    showAliases msg, (text) ->
+      msg.send(text)
+
+  robot.respond /(elasticsearch|es) add alias (.*) (.*)/i, (msg) ->
+    if msg.message.user.id is robot.name
+      return
+
+    setAlias msg, msg.match[1], msg.match[2], (text) ->
+      msg.send(text)
+
+  robot.respond /(elasticsearch|es) clear alias (.*)/i, (msg) ->
+    if msg.message.user.id is robot.name
+      return
+
+    clearAlias msg, msg.match[1], (text) ->
+      msg.send(text)
+
+  showAliases = (msg) ->
+    if _esAliases?
+      msg.send("I cannot find any ElasticSearch Cluster aliases")
+    else
+      for alias of _esAliases
+        msg.send("I found '#{alias}' as an alias for #{_esAliases[alias]}")
+
+  clearAlias = (msg, alias) ->
+    delete _esAliases[alias]
+    robot.brain.data._esAliases = _esAliases
+    msg.send("The alias #{alias} has been removed")
+
+  setAlias = (msg, alias, url) ->
+    _nagiosAliases[alias] = url
+    robot.brain.data._esAliases = _esAliases
+    msg.send("The alias #{alias} for #{url} has been added to the brain")
