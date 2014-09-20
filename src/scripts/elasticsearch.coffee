@@ -18,6 +18,8 @@
 
 _esAliases = {}
 
+QS = require 'querystring'
+
 module.exports = (robot) ->
 
   robot.brain.on 'loaded', ->
@@ -79,7 +81,45 @@ module.exports = (robot) ->
           shards = json['_shards']['total']
           successful = json['_shards']['successful']
           failure = json['_shards']['failed']
-          msg.send "Total Shards: #{shards} \n Successful: #{successful} \n Failure: #{failure}"
+          msg.send "Results: \n Total Shards: #{shards} \n Successful: #{successful} \n Failure: #{failure}"
+
+  disableAllocation = (msg, alias) ->
+    cluster_url = _esAliases[alias]
+
+    if cluster_url == "" || cluster_url == undefined
+      msg.send("No ES Cluster found for #{alias}")
+    else
+      msg.send("Disabling Allocation for the cluster #{cluster_url}")
+
+      data = {
+        'transient': {
+          'cluster.routing.allocation.enable': 'none'
+        }
+      }
+
+      json = JSON.stringify(data)
+      msg.http("#{cluster_url}/_cluster/settings")
+        .put(json) (err, res, body) ->
+          msg.send(body)
+
+  enableAllocation = (msg, alias) ->
+    cluster_url = _esAliases[alias]
+
+    if cluster_url == "" || cluster_url == undefined
+      msg.send("No ES Cluster found for #{alias}")
+    else
+      msg.send("Enabling Allocation for the cluster #{cluster_url}")
+
+      data = {
+        'transient': {
+          'cluster.routing.allocation.enable': 'all'
+        }
+      }
+
+      json = JSON.stringify(data)
+      msg.http("#{cluster_url}/_cluster/settings")
+        .put(json) (err, res, body) ->
+          msg.send(body)
 
   showAliases = (msg) ->
 
@@ -146,4 +186,18 @@ module.exports = (robot) ->
       return
 
     clearCache msg, msg.match[1], (text) ->
+      msg.send(text)
+
+  robot.respond /elasticsearch disable allocation (.*)/i, (msg) ->
+    if msg.message.user.id is robot.name
+      return
+
+    disableAllocation msg, msg.match[1], (text) ->
+      msg.send(text)
+
+  robot.respond /elasticsearch enable allocation (.*)/i, (msg) ->
+    if msg.message.user.id is robot.name
+      return
+
+    enableAllocation msg, msg.match[1], (text) ->
       msg.send(text)
