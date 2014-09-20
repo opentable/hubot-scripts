@@ -6,6 +6,7 @@
 #   hubot: elasticsearch cat nodes [cluster] - Gets the information from the cat nodes endpoint for the given server or alias
 #   hubot: elasticsearch cat indexes [cluster] - Gets the information from the cat indexes endpoint for the given server or alias
 #   hubot: elasticsearch clear cache [cluster] - Clears the cache for the specified cluster
+#   hubot: elasticsearch cluster-settings [cluster] - Gets a list of all of the settings stored for the cluster
 #   hubot: elasticsearch disable allocation [cluster] - disables shard allocation to allow nodes to be taken offline
 #   hubot: elasticsearch enable allocation [cluster] - renables shard allocation
 #   hubot: elasticsearch show aliases - shows the aliases for the list of ElasticSearch instances
@@ -32,7 +33,7 @@ module.exports = (robot) ->
     cluster_url = _esAliases[alias]
 
     if cluster_url == "" || cluster_url == undefined
-      msg.send("No ES Cluster found for #{alias}")
+      msg.send("Do not recognise the cluster alias: #{alias}")
     else
       msg.http("#{cluster_url}/_cluster/health")
         .get() (err, res, body) ->
@@ -46,7 +47,7 @@ module.exports = (robot) ->
     cluster_url = _esAliases[alias]
 
     if cluster_url == "" || cluster_url == undefined
-      msg.send("No ES Cluster found for #{alias}")
+      msg.send("Do not recognise the cluster alias: #{alias}")
     else
       msg.send("Getting the cat stats for the cluster: #{cluster_url}")
       msg.http("#{cluster_url}/_cat/nodes?h=host,heapPercent,load,segmentsMemory,fielddataMemory,filterCacheMemory,idCacheMemory,percolateMemory,u,heapMax,nodeRole,master")
@@ -60,7 +61,7 @@ module.exports = (robot) ->
     cluster_url = _esAliases[alias]
 
     if cluster_url == "" || cluster_url == undefined
-      msg.send("No ES Cluster found for #{alias}")
+      msg.send("Do not recognise the cluster alias: #{alias}")
     else
       msg.send("Getting the cat indices for the cluster: #{cluster_url}")
       msg.http("#{cluster_url}/_cat/indices/logstash-*?h=idx,sm,fm,fcm,im,pm,ss,sc,dc&v")
@@ -74,7 +75,7 @@ module.exports = (robot) ->
     cluster_url = _esAliases[alias]
 
     if cluster_url == "" || cluster_url == undefined
-      msg.send("No ES Cluster found for #{alias}")
+      msg.send("Do not recognise the cluster alias: #{alias}")
     else
       msg.send("Clearing the cache for the cluster: #{cluster_url}")
       msg.http("#{cluster_url}/_cache/clear")
@@ -89,7 +90,7 @@ module.exports = (robot) ->
     cluster_url = _esAliases[alias]
 
     if cluster_url == "" || cluster_url == undefined
-      msg.send("No ES Cluster found for #{alias}")
+      msg.send("Do not recognise the cluster alias: #{alias}")
     else
       msg.send("Disabling Allocation for the cluster #{cluster_url}")
 
@@ -108,7 +109,7 @@ module.exports = (robot) ->
     cluster_url = _esAliases[alias]
 
     if cluster_url == "" || cluster_url == undefined
-      msg.send("No ES Cluster found for #{alias}")
+      msg.send("Do not recognise the cluster alias: #{alias}")
     else
       msg.send("Enabling Allocation for the cluster #{cluster_url}")
 
@@ -122,6 +123,17 @@ module.exports = (robot) ->
       msg.http("#{cluster_url}/_cluster/settings")
         .put(json) (err, res, body) ->
           msg.send(body)
+
+  showClusterSettings = (msg, alias) ->
+    cluster_url = _esAliases[alias]
+
+    if cluster_url == "" || cluster_url == undefined
+      msg.send("Do not recognise the cluster alias: #{alias}")
+    else
+      msg.send("Gettings the Cluster settings for #{cluster_url}")
+      msg.http("#{cluster_url}/_cluster/settings?pretty=true")
+        .get() (err, res, body) ->
+          msg.send("/code #{body}")
 
   showAliases = (msg) ->
 
@@ -154,6 +166,13 @@ module.exports = (robot) ->
 
     cat_indexes msg, msg.match[1], (text) ->
       msg.send text
+
+  robot.hear /elasticsearch cluster-settings (.*)/i, (msg) ->
+    if msg.message.user.id is robot.name
+      return
+
+    showClusterSettings msg, msg.match[1], (text) ->
+      msg.send(text)
 
   robot.hear /elasticsearch cluster (.*)/i, (msg) ->
     if msg.message.user.id is robot.name
@@ -195,11 +214,4 @@ module.exports = (robot) ->
       return
 
     disableAllocation msg, msg.match[1], (text) ->
-      msg.send(text)
-
-  robot.respond /elasticsearch enable allocation (.*)/i, (msg) ->
-    if msg.message.user.id is robot.name
-      return
-
-    enableAllocation msg, msg.match[1], (text) ->
       msg.send(text)
