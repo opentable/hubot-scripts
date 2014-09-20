@@ -48,10 +48,10 @@ module.exports = (robot) ->
       msg.send("Getting the cat stats for the cluster: #{cluster_url}")
       msg.http("#{cluster_url}/_cat/nodes?h=host,heapPercent,load,segmentsMemory,fielddataMemory,filterCacheMemory,idCacheMemory,percolateMemory,u,heapMax,nodeRole,master")
         .get() (err, res, body) ->
-          lines  = body.split("\n")
-          header = lines.shift()
-          list   = [header].concat(lines.sort().reverse()).join("\n")
-          msg.send("/code #{list}")
+          lines = body.split("\n")
+          header = lines.shift()
+          list = [header].concat(lines.sort().reverse()).join("\n")
+          msg.send("/code #{list}")
 
   catIndexes = (msg, alias) ->
     cluster_url = _esAliases[alias]
@@ -62,10 +62,10 @@ module.exports = (robot) ->
       msg.send("Getting the cat indices for the cluster: #{cluster_url}")
       msg.http("#{cluster_url}/_cat/indices/logstash-*?h=idx,sm,fm,fcm,im,pm,ss,sc,dc&v")
         .get() (err, res, body) ->
-          lines  = body.split("\n")
-          header = lines.shift()
-          list   = [header].concat(lines.sort().reverse()).join("\n")
-          msg.send("/code #{list}")
+          lines = body.split("\n")
+          header = lines.shift()
+          list = [header].concat(lines.sort().reverse()).join("\n")
+          msg.send("/code #{list}")
 
   clearCache = (msg, alias) ->
     cluster_url = _esAliases[alias]
