@@ -25,7 +25,7 @@ QS = require 'querystring'
 module.exports = (robot) ->
 
   robot.brain.on 'loaded', ->
-    if robot.brain.data.elasticsearch_aliases != null
+    if robot.brain.data.elasticsearch_aliases?
       _esAliases = robot.brain.data.elasticsearch_aliases
 
   cluster_health = (msg, alias) ->
