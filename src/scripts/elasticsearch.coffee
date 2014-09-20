@@ -6,6 +6,8 @@
 #   hubot: elasticsearch cat nodes [cluster] - Gets the information from the cat nodes endpoint for the given server or alias
 #   hubot: elasticsearch cat indexes [cluster] - Gets the information from the cat indexes endpoint for the given server or alias
 #   hubot: elasticsearch clear cache [cluster] - Clears the cache for the specified cluster
+#   hubot: elasticsearch disable allocation [cluster] - disables shard allocation to allow nodes to be taken offline
+#   hubot: elasticsearch enable allocation [cluster] - renables shard allocation
 #   hubot: elasticsearch show aliases - shows the aliases for the list of ElasticSearch instances
 #   hubot: elasticsearch add alias [alias name] [url] - sets the alias for a given url
 #   hubot: elasticsearch clear alias [alias name] - please note that this needs to include any port numbers as appropriate
@@ -23,7 +25,7 @@ QS = require 'querystring'
 module.exports = (robot) ->
 
   robot.brain.on 'loaded', ->
-    if robot.brain.data.elasticsearch_aliases?
+    if robot.brain.data.elasticsearch_aliases != null
       _esAliases = robot.brain.data.elasticsearch_aliases
 
   cluster_health = (msg, alias) ->
