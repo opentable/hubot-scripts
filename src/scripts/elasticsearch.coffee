@@ -35,13 +35,10 @@ module.exports = (robot) ->
     if cluster_url == "" || cluster_url == undefined
       msg.send("Do not recognise the cluster alias: #{alias}")
     else
-      msg.http("#{cluster_url}/_cluster/health")
+      msg.http("#{cluster_url}/_cluster/health?pretty=true")
         .get() (err, res, body) ->
           json = JSON.parse(body)
-          cluster_name = json['cluster']
-          status = json['status']
-          number_of_nodes = json['number_of_nodes']
-          msg.send "Cluster: #{cluster_url} \nStatus: #{status} \n Nodes: #{number_of_nodes}"
+          msg.send("/code #{json}")
 
   catNodes = (msg, alias) ->
     cluster_url = _esAliases[alias]
@@ -103,7 +100,7 @@ module.exports = (robot) ->
       json = JSON.stringify(data)
       msg.http("#{cluster_url}/_cluster/settings")
         .put(json) (err, res, body) ->
-          msg.send(body)
+          msg.send("/code #{body}")
 
   enableAllocation = (msg, alias) ->
     cluster_url = _esAliases[alias]
@@ -122,7 +119,7 @@ module.exports = (robot) ->
       json = JSON.stringify(data)
       msg.http("#{cluster_url}/_cluster/settings")
         .put(json) (err, res, body) ->
-          msg.send(body)
+          msg.send("/code #{body}")
 
   showClusterSettings = (msg, alias) ->
     cluster_url = _esAliases[alias]
