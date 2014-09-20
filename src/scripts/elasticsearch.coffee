@@ -2,11 +2,11 @@
 #   Get ElasticSearch Cluster Information
 #
 # Commands:
-#   hubot: elasticsearch cluster [cluster] - Gets the cluster information for the given server or alias
+#   hubot: elasticsearch cluster health [cluster] - Gets the cluster health for the given server or alias
 #   hubot: elasticsearch cat nodes [cluster] - Gets the information from the cat nodes endpoint for the given server or alias
 #   hubot: elasticsearch cat indexes [cluster] - Gets the information from the cat indexes endpoint for the given server or alias
 #   hubot: elasticsearch clear cache [cluster] - Clears the cache for the specified cluster
-#   hubot: elasticsearch cluster-settings [cluster] - Gets a list of all of the settings stored for the cluster
+#   hubot: elasticsearch cluster settings [cluster] - Gets a list of all of the settings stored for the cluster
 #   hubot: elasticsearch disable allocation [cluster] - disables shard allocation to allow nodes to be taken offline
 #   hubot: elasticsearch enable allocation [cluster] - renables shard allocation
 #   hubot: elasticsearch show aliases - shows the aliases for the list of ElasticSearch instances
@@ -29,7 +29,7 @@ module.exports = (robot) ->
     if robot.brain.data.elasticsearch_aliases?
       _esAliases = robot.brain.data.elasticsearch_aliases
 
-  cluster_health = (msg, alias) ->
+  clusterHealth = (msg, alias) ->
     cluster_url = _esAliases[alias]
 
     if cluster_url == "" || cluster_url == undefined
@@ -43,7 +43,7 @@ module.exports = (robot) ->
           number_of_nodes = json['number_of_nodes']
           msg.send "Cluster: #{cluster_url} \nStatus: #{status} \n Nodes: #{number_of_nodes}"
 
-  cat_nodes = (msg, alias) ->
+  catNodes = (msg, alias) ->
     cluster_url = _esAliases[alias]
 
     if cluster_url == "" || cluster_url == undefined
@@ -57,7 +57,7 @@ module.exports = (robot) ->
           list   = [header].concat(lines.sort().reverse()).join("\n")
           msg.send("/code #{list}")
 
-  cat_indexes = (msg, alias) ->
+  catIndexes = (msg, alias) ->
     cluster_url = _esAliases[alias]
 
     if cluster_url == "" || cluster_url == undefined
@@ -157,28 +157,28 @@ module.exports = (robot) ->
     if msg.message.user.id is robot.name
       return
 
-    cat_nodes msg, msg.match[1], (text) ->
+    catNodes msg, msg.match[1], (text) ->
       msg.send text
 
   robot.hear /elasticsearch cat indexes (.*)/i, (msg) ->
     if msg.message.user.id is robot.name
       return
 
-    cat_indexes msg, msg.match[1], (text) ->
+    catIndexes msg, msg.match[1], (text) ->
       msg.send text
 
-  robot.hear /elasticsearch cluster-settings (.*)/i, (msg) ->
+  robot.hear /elasticsearch cluster settings (.*)/i, (msg) ->
     if msg.message.user.id is robot.name
       return
 
     showClusterSettings msg, msg.match[1], (text) ->
       msg.send(text)
 
-  robot.hear /elasticsearch cluster (.*)/i, (msg) ->
+  robot.hear /elasticsearch cluster health (.*)/i, (msg) ->
     if msg.message.user.id is robot.name
       return
 
-    cluster_health msg, msg.match[1], (text) ->
+    clusterHealth msg, msg.match[1], (text) ->
       msg.send text
 
   robot.hear /elasticsearch show aliases/i, (msg) ->
