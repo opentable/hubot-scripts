@@ -37,8 +37,7 @@ module.exports = (robot) ->
     else
       msg.http("#{cluster_url}/_cluster/health?pretty=true")
         .get() (err, res, body) ->
-          json = JSON.parse(body)
-          msg.send("/code #{json}")
+          msg.send("/code #{body}")
 
   catNodes = (msg, alias) ->
     cluster_url = _esAliases[alias]
