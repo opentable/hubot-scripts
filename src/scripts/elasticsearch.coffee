@@ -126,7 +126,7 @@ module.exports = (robot) ->
     if cluster_url == "" || cluster_url == undefined
       msg.send("Do not recognise the cluster alias: #{alias}")
     else
-      msg.send("Gettings the Cluster settings for #{cluster_url}")
+      msg.send("Getting the Cluster settings for #{cluster_url}")
       msg.http("#{cluster_url}/_cluster/settings?pretty=true")
         .get() (err, res, body) ->
           msg.send("/code #{body}")
