@@ -211,3 +211,10 @@ module.exports = (robot) ->
 
     disableAllocation msg, msg.match[1], (text) ->
       msg.send(text)
+
+  robot.respond /elasticsearch enable allocation (.*)/i, (msg) ->
+    if msg.message.user.id is robot.name
+      return
+
+    enableAllocation msg, msg.match[1], (text) ->
+      msg.send(text)
