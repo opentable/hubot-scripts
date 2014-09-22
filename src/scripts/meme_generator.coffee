@@ -32,8 +32,12 @@
 #   hubot memegen PREPARE YOURSELF <text> - Generates GoT
 #   hubot memegen WHAT IF I TOLD YOU <text> - Generates Morpheus
 #   hubot memegen <text> BETTER DRINK MY OWN PISS - Generates Bear Grylls
+#   hubot memegen INTERNET KID <text>, <text> - Generates First-day-on-the-Internet Kid
 # Author:
 #   skalnik
+
+
+inspect = require('util').inspect
 
 module.exports = (robot) ->
   unless robot.brain.data.memes?
@@ -137,6 +141,11 @@ module.exports = (robot) ->
         regex: /(memegen)?(.*) (BETTER DRINK MY OWN PISS)/i,
         generatorID: 92,
         imageID: 89714
+      },
+      {
+        regex: /(memegen)? ?INTERNET KID ?([^,]*),?(.*)/i,
+        generatorID: 1095654,
+        imageID: 4714007
       }
     ]
 
@@ -196,19 +205,33 @@ memeGenerator = (msg, generatorID, imageID, text0, text1, callback) ->
       text0: text0,
       text1: text1
     .get() (err, res, body) ->
-      result = JSON.parse(body)['result']
-      if result? and result['instanceUrl']? and result['instanceImageUrl']? and result['instanceID']?
-        instanceID = result['instanceID']
-        instanceURL = result['instanceUrl']
-        img = result['instanceImageUrl']
-        msg.http(instanceURL).get() (err, res, body) ->
-          # Need to hit instanceURL so that image gets generated
-          if preferredDimensions?
-            callback "http://images.memegenerator.net/instances/#{preferredDimensions}/#{instanceID}.jpg"
-          else
-            callback "http://images.memegenerator.net/instances/#{instanceID}.jpg"
-      else
-        msg.reply "Sorry, I couldn't generate that image."
+      if err
+        msg.reply "Ugh, I got an exception trying to contact memegenerator.net:", inspect(err)
+        return
+
+      jsonBody = JSON.parse(body)
+      success = jsonBody.success
+      errorMessage = jsonBody.errorMessage
+      result = jsonBody.result
+
+      if not success
+        msg.reply "Ugh, stupid request to memegenerator.net failed: \"#{errorMessage}.\" What does that even mean?"
+        return
+
+      instanceID = result?.instanceID
+      instanceURL = result?.instanceUrl
+      img = result?.instanceImageUrl
+
+      unless instanceID and instanceURL and img
+        msg.reply "Ugh, I got back weird results from memegenerator.net. Expected an image URL, but couldn't find it in the result. Here's what I got:", inspect(jsonBody)
+        return
+
+      msg.http(instanceURL).get() (err, res, body) ->
+        # Need to hit instanceURL so that image gets generated
+        if preferredDimensions?
+          callback "http://images.memegenerator.net/instances/#{preferredDimensions}/#{instanceID}.jpg"
+        else
+          callback "http://images.memegenerator.net/instances/#{instanceID}.jpg"
 
 khanify = (msg) ->
   msg = msg.toUpperCase()

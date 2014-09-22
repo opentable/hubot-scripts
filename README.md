@@ -3,6 +3,8 @@
 These are a collection of community scripts for [hubot][hubot], a chat bot for
 your company.
 
+**Imporant**: please read [CONTRIBUTING.md](CONTRIBUTING.md) before submitting new scripts.
+
 
 ## Discovering
 
@@ -16,7 +18,7 @@ installed. Check `package.json` to be sure. If that is the case, you update
 `hubot-scripts.json` to list any scripts from this repository you want to load.
 The default `hubot-scripts.json` looks like:
 
-    ["redis-brain.coffee", "tweet.coffee", "shipit.coffee"]
+    ["redis-brain.coffee", "shipit.coffee"]
     
 If you update `hubot-scripts` in `package.json`, you will automatically get
 updates to your scripts listed here.
@@ -52,7 +54,7 @@ name and required version in the TomDoc comments at the top of your script.
 ## Documentation
 
 We're now requiring all scripts in hubot-scripts to contain a documentation
-header so people know every thing about the script.
+header so people know everything about the script.
 
 ```coffeescript
 # Description

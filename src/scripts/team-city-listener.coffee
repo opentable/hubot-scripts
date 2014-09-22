@@ -18,17 +18,27 @@
 #   http://sourceforge.net/apps/trac/tcplugins/browser/tcWebHooks/trunk/src/main/java/webhook/teamcity/payload/format/WebHookPayloadJsonContent.java
 #
 # Author:
-#   cubanx 
+#   cubanx
 
-Robot = require('hubot').Robot
+TextMessage = require('hubot').TextMessage
 
 module.exports = (robot)->
   robot.router.post "/hubot/build", (req, res)->
     user = robot.brain.userForId 'broadcast'
-    user.room = req.query.room 
+    user.room = req.query.room
     user.type = 'groupchat'
     build = req.body.build
 
-    robot.send user, "#{build.message} ran on agent: #{build.agentName}, #{build.buildStatusUrl}"
+    robot.send user, "#{build.message} and ran on agent:#{build.agentName}"
+
+    soundToPlay = 'http://soundfxnow.com/soundfx/Human-Cheer-SmallCrowd01.mp3'
+
+    if build.buildResult == 'failure'
+      failList = ["dog", "cat", "baby"]
+      soundToPlay = 'http://soundfxnow.com/soundfx/Sad-Trombone.mp3'
+      message = 'bing image fail ' + failList[Math.floor(Math.random() * failList.length)]
+      robot.receive new TextMessage user, message
+
+    robot.receive new TextMessage user, "hubot sound #{soundToPlay}"
 
     res.end "that tickles:" + process.env.PORT

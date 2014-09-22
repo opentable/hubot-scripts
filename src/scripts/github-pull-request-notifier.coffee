@@ -22,31 +22,35 @@
 #
 # Authors:
 #   spajus
+#
+# Notes:
+#   Room information can be obtained by hubot-script: room-info.coffee
+#   Room must be in url encoded format (i.e. encodeURIComponent("yourRoomInfo"))
+
 
 url = require('url')
 querystring = require('querystring')
 
 module.exports = (robot) ->
-
   robot.router.post "/hubot/gh-pull-requests", (req, res) ->
     query = querystring.parse(url.parse(req.url).query)
 
-    res.end
-
-    user = {}
-    user.room = query.room if query.room
-    user.type = query.type if query.type
+    data = req.body
+    room = query.room
 
     try
-      announcePullRequest req.body, (what) ->
-        robot.send user, what
+      announcePullRequest data, (what) ->
+        robot.messageRoom room, what
     catch error
+      robot.messageRoom room, "Whoa, I got an error: #{error}"
       console.log "github pull request notifier error: #{error}. Request: #{req.body}"
+
+    res.end ""
 
 
 announcePullRequest = (data, cb) ->
   if data.action == 'opened'
-    mentioned = data.pull_request.body.match(/(^|\s)(@[\w\-\/]+)/g)
+    mentioned = data.pull_request.body?.match(/(^|\s)(@[\w\-\/]+)/g)
 
     if mentioned
       unique = (array) ->

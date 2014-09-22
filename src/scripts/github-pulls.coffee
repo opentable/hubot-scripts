@@ -18,7 +18,7 @@
 # Notes:
 #   HUBOT_GITHUB_API allows you to set a custom URL path (for Github enterprise users)
 #
-#   You can further filter pull request title by providing a reguar expression.
+#   You can further filter pull request title by providing a regular expression.
 #   For example, `show me hubot pulls with awesome fix`.
 #
 # Author:
@@ -63,18 +63,16 @@ module.exports = (robot) ->
 
     unless (org_name)
       msg.send "No organization specified, please provide one or set HUBOT_GITHUB_ORG accordingly."
-    return
+      return
 
-    url = "#{url_api_base}/orgs/#{org_name}/issues?filter=all"
+    url = "#{url_api_base}/orgs/#{org_name}/issues?filter=all&state=open&per_page=100"
     github.get url, (issues) ->
       if issues.length == 0
         summary = "Achievement unlocked: open pull requests zero!"
       else
         filtered_result = []
         for issue in issues
-          if issue.pull_request.html_url == null
-            continue
-          filtered_result.push(issue)
+          filtered_result.push issue if issue.pull_request?
 
         if filtered_result.length == 0
           summary = "Achievement unlocked: open pull requests zero!"
