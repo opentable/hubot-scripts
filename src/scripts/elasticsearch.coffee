@@ -46,7 +46,7 @@ module.exports = (robot) ->
       msg.send("Do not recognise the cluster alias: #{alias}")
     else
       msg.send("Getting the cat stats for the cluster: #{cluster_url}")
-      msg.http("#{cluster_url}/_cat/nodes?h=host,heapPercent,load,segmentsMemory,fielddataMemory,filterCacheMemory,idCacheMemory,percolateMemory,u,heapMax,nodeRole,master")
+      msg.http("#{cluster_url}/_cat/nodes?h=heapPercent,host,load,segmentsMemory,fielddataMemory,filterCacheMemory,idCacheMemory,percolateMemory,u,heapMax,nodeRole,master")
         .get() (err, res, body) ->
           lines = body.split("\n")
           header = lines.shift()
