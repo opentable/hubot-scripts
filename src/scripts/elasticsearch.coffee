@@ -131,6 +131,17 @@ module.exports = (robot) ->
         .get() (err, res, body) ->
           msg.send("/code #{body}")
 
+  showIndexSettings = (msg, alias, index) ->
+    cluster_url = _esAliases[alias]
+
+    if cluster_url == "" || cluster_url == undefined
+      msg.send("Do not recognise the cluster alias: #{alias}")
+    else
+      msg.send("Getting the Index settings for #{index} on #{cluster_url}")
+      msg.http("#{cluster_url}/#{index}/_settings?pretty=true")
+        .get() (err, res, body) ->
+          msg.send("/code #{body}")
+
   showAliases = (msg) ->
 
     if _esAliases == null
@@ -175,6 +186,13 @@ module.exports = (robot) ->
       return
 
     clusterHealth msg, msg.match[1], (text) ->
+      msg.send text
+
+  robot.hear /elasticsearch index settings (.*) (.*)/i, (msg) ->
+    if msg.message.user.id is robot.name
+      return
+
+    showIndexSettings msg, msg.match[1], msg.match[2], (text) ->
       msg.send text
 
   robot.hear /elasticsearch show aliases/i, (msg) ->
