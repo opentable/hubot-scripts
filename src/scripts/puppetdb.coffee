@@ -2,8 +2,8 @@
 #   PuppetDB integration with hubot
 #
 # Commands:
-#   hubot rundeck show status in [environment]   - Shows the current status statistics
-#   hubot rundeck show stats in [environment]    - Shows the current resource/node statistics
+#   hubot puppetdb show status in [environment]   - Shows the current status statistics
+#   hubot puppetdb show stats in [environment]    - Shows the current resource/node statistics
 #   hubot puppetdb show aliases                  - shows the aliases for the list of puppetboard instances
 #   hubot puppetdb add alias [alias name] [url]  - sets the alias for a given url
 #   hubot puppetdb clear alias [alias name]      - removed the given alias
