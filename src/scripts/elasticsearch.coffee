@@ -68,6 +68,20 @@ module.exports = (robot) ->
           list = [header].concat(lines.sort().reverse()).join("\n")
           msg.send("/code #{list}")
 
+  catAllocation = (msg, alias) ->
+    cluster_url = _esAliases[alias]
+
+    if cluster_url == "" || cluster_url == undefined
+      msg.send("Do not recognise the cluster alias: #{alias}")
+    else
+      msg.send("Getting the cat allocation for the cluster: #{cluster_url}")
+      msg.http("#{cluster_url}/_cat/allocation/?v")
+        .get() (err, res, body) ->
+          lines = body.split("\n")
+          header = lines.shift()
+          list = [header].concat(lines.sort().reverse()).join("\n")
+          msg.send("/code #{list}")
+
   clearCache = (msg, alias) ->
     cluster_url = _esAliases[alias]
 
@@ -173,6 +187,13 @@ module.exports = (robot) ->
       return
 
     catIndexes msg, msg.match[1], (text) ->
+      msg.send text
+
+  robot.hear /elasticsearch cat allocation (.*)/i, (msg) ->
+    if msg.message.user.id is robot.name
+      return
+
+    catAllocation msg, msg.match[1], (text) ->
       msg.send text
 
   robot.hear /elasticsearch cluster settings (.*)/i, (msg) ->
