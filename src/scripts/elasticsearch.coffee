@@ -5,6 +5,7 @@
 #   hubot: elasticsearch cluster health [cluster]           - Gets the cluster health for the given server or alias
 #   hubot: elasticsearch cat nodes [cluster]                - Gets the information from the cat nodes endpoint for the given server or alias
 #   hubot: elasticsearch cat indexes [cluster]              - Gets the information from the cat indexes endpoint for the given server or alias
+#   hubot: elasticsearch cat allocation [cluster]           - Gets the information from the cat allocation endpoint for the given server or alias
 #   hubot: elasticsearch clear cache [cluster]              - Clears the cache for the specified cluster
 #   hubot: elasticsearch cluster settings [cluster]         - Gets a list of all of the settings stored for the cluster
 #   hubot: elasticsearch index settings [cluster] [index]   - Gets a list of all of the settings stored for a particular index
@@ -75,7 +76,7 @@ module.exports = (robot) ->
       msg.send("Do not recognise the cluster alias: #{alias}")
     else
       msg.send("Getting the cat allocation for the cluster: #{cluster_url}")
-      msg.http("#{cluster_url}/_cat/allocation/?v")
+      msg.http("#{cluster_url}/_cat/allocation/?h=disk.percent,node,shards,disk.used,disk.avail")
         .get() (err, res, body) ->
           lines = body.split("\n")
           header = lines.shift()
