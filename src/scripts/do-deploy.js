@@ -16,9 +16,9 @@
 //
 // Commands:
 //   hubot deploy <app alias> - Deploys app by pinning last successful build then triggering the deploy 'build'
-//   hubot status show aliases - List all aliases
-//   hubot status set alias <app alias> <dev build type id> <deploy build type id> - Sets an alias
-//   hubot status clear aliases <app alias> - Clears an alias
+//   hubot deployment show aliases - List all aliases
+//   hubot deployment set alias <app alias> <dev build type id> <deploy build type id> - Sets an alias
+//   hubot deployment clear aliases <app alias> - Clears an alias
 //   hubot deployment show last successful build for <app alias> - Shows the last successful build
 //   hubot deployment show last successful deployment for <app alias> - Shows the last successful deployment
 //
