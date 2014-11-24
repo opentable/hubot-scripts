@@ -24,6 +24,7 @@
   "dependencies": {
     "cheerio": "0.12.4",
     "date-utils": "^1.2.16",
+    "githubot": "^1.0.0-beta2",
     "gitio": "^1.0.1",
     "moment": "^2.8.4",
     "q": "~1.0.1",
