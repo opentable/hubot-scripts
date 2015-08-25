@@ -11,8 +11,8 @@
 #   hubot singularity show aliases
 #   hubot singularity add alias <alias> <url>
 #   hubot singularity clear alias <alias>
-#   hubot singularity show requests in <alias>
-#   hubot singularity bounce <request> in <alias>
+#   hubot singularity show requests on <alias>
+#   hubot singularity bounce <request> on <alias>
 #
 # Author:
 #   Arca Artem - <aartem@opentable.com>
@@ -66,8 +66,8 @@ module.exports = (robot) ->
     msg.send "hubot singularity show aliases"
     msg.send "hubot singularity add alias <alias> <url>"
     msg.send "hubot singularity clear alias <alias>"
-    msg.send "hubot singularity show requests in <alias>"
-    msg.send "hubot singularity bounce <request> in <alias>"
+    msg.send "hubot singularity show requests on <alias>"
+    msg.send "hubot singularity bounce <request> on <alias>"
 
   bounceRequest = (msg, alias, request) ->
     if not _singularityAliases[alias]?
