@@ -13,6 +13,9 @@
 #   hubot singularity clear alias <alias>
 #   hubot singularity show requests on <alias>
 #   hubot singularity bounce <request> on <alias>
+#   hubot singularity show active tasks for <request> on <alias>
+#   hubot singularity kill task <taksId> on <alias>
+#   hubot singularity show task updates for <taskId> on <alias>
 #
 # Author:
 #   Arca Artem - <aartem@opentable.com>
@@ -38,9 +41,14 @@ module.exports = (robot) ->
     robot.brain.data.singularity_aliases = _singularityAliases
     msg.send("The singularity alias #{alias} for #{url} has been added")
 
-  showRequests = (msg, alias) ->
+  isAliasDefined = (msg, alias) ->
     if not _singularityAliases[alias]?
       msg.send "I don't know that singularity alias"
+      return false
+    return true
+
+  showRequests = (msg, alias) ->
+    if not isAliasDefined msg, alias
       return
 
     url = _singularityAliases[alias].url + '/api/requests'
@@ -68,10 +76,89 @@ module.exports = (robot) ->
     msg.send "hubot singularity clear alias <alias>"
     msg.send "hubot singularity show requests on <alias>"
     msg.send "hubot singularity bounce <request> on <alias>"
+    msg.send "hubot singularity show active tasks for <request> on <alias>"
+    msg.send "hubot singularity kill task <taksId> on <alias>"
+    msg.send "hubot singularity show task updates for <taskId> on <alias>"
+
+  showActiveTasks = (msg, request, alias) ->
+    if not isAliasDefined msg, alias
+      return
+
+    url = _singularityAliases[alias].url + '/api/history/request/' + request + '/tasks/active'
+
+    robot.http(url)
+      .header('Accept', 'application/json')
+      .get() (err, res, body) ->
+        if err
+          msg.send "There was an error while making the request:"
+          msg.send error
+          return
+
+        try
+          tasks = JSON.parse body
+          msgEnd = if tasks.length != 1 then 's' else ''
+          msg.send "I found #{tasks.length} active task#{msgEnd}:"
+          for task in tasks
+            taskUrl = _singularityAliases[alias].url + '/api/tasks/task/' + task.taskId.id
+            robot.http(taskUrl)
+              .get() (err, res, body) ->
+                if (err)
+                  msg.send "There was an error while making the request:"
+                  msg.send error
+                  return
+
+                taskDetails = JSON.parse body
+                host = taskDetails.offer.hostname
+
+                portsResource = taskDetails.mesosTask.resources.find (r) ->
+                  r.name == 'ports'
+
+                if (portsResource and portsResource.ranges.range)
+                  port = portsResource.ranges.range[0].begin;
+                  msg.send "Task started on '#{host}:#{port}' at #{new Date(task.taskId.startedAt)} with id: '#{task.taskId.id}'"
+        catch error
+          msg.send "Ran into an error parsing JSON :"
+          msg.send error
+
+  killTask = (msg, taskId, alias) ->
+    if not isAliasDefined msg, alias
+      return
+
+    url = _singularityAliases[alias].url + '/api/tasks/task/' + taskId
+
+    robot.http(url)
+      .del() (err, res, body) ->
+        if err or res.statusCode == 404
+          msg.send "There was an error while making the request:"
+          msg.send err or body
+          return
+        msg.send "Killing '#{taskId}' on '#{alias}'"
+
+  showTaskUpdates = (msg, taskId, alias) ->
+    if not isAliasDefined msg, alias
+      return
+
+    url = _singularityAliases[alias].url + '/api/history/task/' + taskId
+
+    robot.http(url)
+      .header('Accept', 'application/json')
+      .get() (err, res, body) ->
+        if err or res.statusCode == 404
+          msg.send "There was an error while making the request:"
+          msg.send error or body
+          return
+
+        try
+          updates = JSON.parse body
+          msg.send "Updates for task: '#{taskId}'"
+          for update in updates.taskUpdates
+            msg.send "Task state: '#{update.taskState}' started at #{new Date(update.timestamp)}; #{update.statusMessage || ''}"
+        catch error
+          msg.send "Ran into an error parsing JSON :"
+          msg.send error
 
   bounceRequest = (msg, alias, request) ->
-    if not _singularityAliases[alias]?
-      msg.send "I don't know that singularity alias"
+    if not isAliasDefined msg, alias
       return
 
     url = _singularityAliases[alias].url + '/api/requests/request/' + request + '/bounce'
@@ -102,6 +189,15 @@ module.exports = (robot) ->
 
   robot.respond /singularity bounce (.*) on (.*)/i, (msg) ->
     bounceRequest msg, msg.match[2], msg.match[1]
+
+  robot.respond /singularity show active tasks for (.*) on (.*)/i, (msg) ->
+    showActiveTasks msg, msg.match[1], msg.match[2]
+
+  robot.respond /singularity kill task (.*) on (.*)/i, (msg) ->
+    killTask msg, msg.match[1], msg.match[2]
+
+  robot.respond /singularity show task updates for (.*) on (.*)/i, (msg) ->
+    showTaskUpdates msg, msg.match[1], msg.match[2]
 
   robot.respond /singularity\?/i, (msg) ->
     showCommands(msg)
