@@ -109,13 +109,14 @@ module.exports = (robot) ->
 
                 taskDetails = JSON.parse body
                 host = taskDetails.offer.hostname
-
-                portsResource = taskDetails.mesosTask.resources.find (r) ->
+                portsResource = taskDetails.mesosTask.resources.filter (r) ->
                   r.name == 'ports'
 
-                if (portsResource and portsResource.ranges.range)
-                  port = portsResource.ranges.range[0].begin;
+                if (portsResource[0] and portsResource[0].ranges.range)
+                  port = portsResource[0].ranges.range[0].begin;
                   msg.send "Task started on '#{host}:#{port}' at #{new Date(task.taskId.startedAt)} with id: '#{task.taskId.id}'"
+                else
+                  msg.send "Task started on '#{host}' at #{new Date(task.taskId.startedAt)} with id: '#{task.taskId.id}'"
         catch error
           msg.send "Ran into an error parsing JSON :"
           msg.send error
