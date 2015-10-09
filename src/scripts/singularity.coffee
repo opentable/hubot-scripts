@@ -20,20 +20,21 @@
 # Author:
 #   Arca Artem - <aartem@opentable.com>
 
-_singularityAliases = {}
+util = require 'util'
+singularityAliases = {}
 
 module.exports = (robot) ->
 
   showAliases = (msg) ->
-    if _singularityAliases == null || Object.keys(_singularityAliases).length == 0
+    if singularityAliases == null || Object.keys(singularityAliases).length == 0
       msg.send("I cannot find any singularity aliases")
     else
-      for alias of _singularityAliases
-        msg.send("I found '#{alias}' as an alias for singularity here at: #{_singularityAliases[alias]['url']}")
+      for alias of singularityAliases
+        msg.send("I found '#{alias}' as an alias for singularity here at: #{singularityAliases[alias]['url']}")
 
   clearAlias = (msg, alias) ->
-    delete _singularityAliases[alias]
-    robot.brain.data.singularity_aliases = _singularityAliases
+    delete singularityAliases[alias]
+    robot.brain.data.singularityaliases = singularityAliases
     msg.send("The singularity alias #{alias} has been removed")
 
   setAlias = (msg, alias, url) ->
@@ -51,23 +52,52 @@ module.exports = (robot) ->
     if not isAliasDefined msg, alias
       return
 
-    url = _singularityAliases[alias].url + '/api/requests'
+    singularityAliases[alias] = { url: url }
+    robot.brain.data.singularityaliases = singularityAliases
+    msg.send("The singularity alias #{alias} for #{url} has been added")
+
+  getRequests = (alias, cb) ->
+    url = singularityAliases[alias].url + '/api/requests'
     robot.http(url)
       .header('Accept', 'application/json')
       .get() (err, res, body) ->
         if (err)
-          msg.send "There was an error while making the request:"
-          msg.send err
-          return
+          return cb(err)
 
         data = null
         try
-          requests = JSON.parse body
-          for request in requests
-            msg.send "I found request '#{request.request.id} (#{request.request.requestType} - #{request.state})' for '#{alias}'"
+          cb(null, JSON.parse(body))
         catch error
-          msg.send "Ran into an error parsing JSON :"
-          msg.send error
+          cb(error)
+
+  showRequests = (msg, alias) ->
+    if not singularityAliases[alias]?
+      msg.send "I don't know that singularity alias"
+      return
+
+    getRequests(alias, (err, requests) ->
+      if (err)
+        msg.send "There was an error calling Singularity API:"
+        msg.send err
+        return
+
+      for request in requests
+        msg.send "I found request '#{request.request.id} (#{request.request.requestType} - #{request.state})' for '#{alias}'"
+    )
+
+  validRequest = (alias, request, cb) ->
+    getRequests(alias, (err, requests) ->
+      if (err)
+        cb(err)
+        return
+
+      for r in requests
+        if r.request.id == request
+          cb(null, true)
+          return
+
+      cb(null, false)
+    )
 
   showCommands = (msg) ->
     msg.send "Singularity commands:"
@@ -162,19 +192,31 @@ module.exports = (robot) ->
     if not isAliasDefined msg, alias
       return
 
-    url = _singularityAliases[alias].url + '/api/requests/request/' + request + '/bounce'
+    validRequest(alias, request, (err, isValid) ->
+      if (err)
+        msg.send "There was an error calling Singularity API:"
+        msg.send err
+        return
 
-    robot.http(url)
-      .post() (err, res, body) ->
-        if (err)
-          msg.send "There was an error while making the request:"
-          msg.send err
-          return
-        msg.send "Bouncing '#{request}' on '#{alias}'"
+      if not isValid
+        msg.send "I don't know request '#{request}' on '#{alias}'"
+        return
+
+      url = singularityAliases[alias].url + '/api/requests/request/' + request + '/bounce'
+
+      robot.http(url)
+        .post() (err, res, body) ->
+          if (err)
+            msg.send "There was an error while making the request:"
+            msg.send err
+            return
+
+          msg.send "Bouncing '#{request}' on '#{alias}'"
+    )
 
   robot.brain.on 'loaded', ->
-    if robot.brain.data.singularity_aliases?
-      _singularityAliases = robot.brain.data.singularity_aliases
+    if robot.brain.data.singularityaliases?
+      singularityAliases = robot.brain.data.singularityaliases
 
   robot.respond /singularity show aliases/i, (msg) ->
     showAliases(msg)
