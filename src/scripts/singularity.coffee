@@ -48,8 +48,9 @@ module.exports = (robot) ->
       return false
     return true
 
-  showRequests = (msg, alias) ->
-    if not isAliasDefined msg, alias
+  getRequests = (alias, cb) ->
+    if not _singularityAliases[alias]?
+      cb("I don't know that singularity alias")
       return
 
     url = _singularityAliases[alias].url + '/api/requests'
@@ -57,23 +58,29 @@ module.exports = (robot) ->
       .header('Accept', 'application/json')
       .get() (err, res, body) ->
         if (err)
-          msg.send "There was an error while making the request:"
-          msg.send err
+          cb(err)
           return
 
-        data = null
         try
           requests = JSON.parse body
-          if requests.length > 0
-            msgRequests = requests.map((i) -> "  #{i.request.id} (#{i.request.requestType} - #{i.state})")
-                                  .reduce(((t, s) -> t + "\n" + s), "")
-
-            msg.send "I found following requests on #{alias}" + msgRequests
-          else
-            msg.send "No requests found on #{alias}"
+          cb(null, requests)
         catch error
-          msg.send "Ran into an error parsing JSON :"
-          msg.send error
+          cb(error)
+
+  showRequests = (msg, alias) ->
+    getRequests(alias, (err, requests) ->
+      if (err)
+        msg.send err
+        return
+
+      if requests.length > 0
+        msgRequests = requests.map((i) -> "  #{i.request.id} (#{i.request.requestType} - #{i.state})")
+                              .reduce(((t, s) -> t + "\n" + s), "")
+
+        msg.send "I found following requests on #{alias}" + msgRequests
+      else
+        msg.send "No requests found on #{alias}"
+    )
 
   showCommands = (msg) ->
     msg.send "Singularity commands:"
@@ -166,18 +173,29 @@ module.exports = (robot) ->
           msg.send error
 
   bounceRequest = (msg, alias, request) ->
-    if not isAliasDefined msg, alias
+    if not request?
+      msg.send "Please provide a valid request id"
       return
 
-    url = _singularityAliases[alias].url + '/api/requests/request/' + request + '/bounce'
+    getRequests(alias, (err, requests) ->
+      if (err)
+        msg.send err
+        return
 
-    robot.http(url)
-      .post() (err, res, body) ->
-        if (err)
-          msg.send "There was an error while making the request:"
-          msg.send err
+      for r in requests
+        if r.request.id == request
+          url = _singularityAliases[alias].url + '/api/requests/request/' + request + '/bounce'
+
+          robot.http(url)
+            .post() (error, res, body) ->
+              if (error)
+                msg.send "There was an error while making the request:"
+                msg.send err
+                return
+              msg.send "Bouncing '#{request}' on '#{alias}'"
           return
-        msg.send "Bouncing '#{request}' on '#{alias}'"
+      msg.send "Request '#{request}' not found on #{alias}"
+    )
 
   robot.brain.on 'loaded', ->
     if robot.brain.data.singularity_aliases?
