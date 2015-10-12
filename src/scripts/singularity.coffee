@@ -8,6 +8,7 @@
 #   None
 #
 # Commands:
+#   hubot singularity?
 #   hubot singularity show aliases
 #   hubot singularity add alias <alias> <url>
 #   hubot singularity clear alias <alias>
@@ -63,14 +64,20 @@ module.exports = (robot) ->
         data = null
         try
           requests = JSON.parse body
-          for request in requests
-            msg.send "I found request '#{request.request.id} (#{request.request.requestType} - #{request.state})' for '#{alias}'"
+          if requests.length > 0
+            msgRequests = requests.map((i) -> "  #{i.request.id} (#{i.request.requestType} - #{i.state})")
+                                  .reduce(((t, s) -> t + "\n" + s), "")
+
+            msg.send "I found following requests on #{alias}" + msgRequests
+          else
+            msg.send "No requests found on #{alias}"
         catch error
           msg.send "Ran into an error parsing JSON :"
           msg.send error
 
   showCommands = (msg) ->
     msg.send "Singularity commands:"
+    msg.send "hubot singularity?"
     msg.send "hubot singularity show aliases"
     msg.send "hubot singularity add alias <alias> <url>"
     msg.send "hubot singularity clear alias <alias>"
