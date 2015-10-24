@@ -17,6 +17,9 @@
 #   hubot singularity show active tasks for <request> on <alias>
 #   hubot singularity kill task <taksId> on <alias>
 #   hubot singularity show task updates for <taskId> on <alias>
+#   hubot singularity show log files for task <taskId> on <alias>
+#   hubot singularity show log <logName> for task <taskId> on <alias> <length> <offset>
+#   hubot singularity grep log <logName> for task <taskId> on <alias> <length> <offset> <grepString>
 #
 # Author:
 #   Arca Artem - <aartem@opentable.com>
@@ -93,6 +96,9 @@ module.exports = (robot) ->
     msg.send "hubot singularity show active tasks for <request> on <alias>"
     msg.send "hubot singularity kill task <taksId> on <alias>"
     msg.send "hubot singularity show task updates for <taskId> on <alias>"
+    msg.send "hubot singularity show log files for task <taskId> on <alias>"
+    msg.send "hubot singularity show log <logName> for task <taskId> on <alias> <length> <offset>"
+    msg.send "hubot singularity grep log <logName> for task <taskId> on <alias> <length> <offset> <grepString>"
 
   showActiveTasks = (msg, request, alias) ->
     if not isAliasDefined msg, alias
@@ -197,6 +203,54 @@ module.exports = (robot) ->
       msg.send "Request '#{request}' not found on #{alias}"
     )
 
+  showTaskLogFiles = (msg, taskId, alias) ->
+    if not isAliasDefined msg, alias
+      return
+
+    url = _singularityAliases[alias].url + '/api/sandbox/' + taskId + '/browse'
+
+    robot.http(url)
+      .header('Accept', 'application/json')
+      .get() (err, res, body) ->
+        if err or res.statusCode == 404
+          msg.send "There was an error while making the request:"
+          msg.send error or body
+          return
+
+        try
+          logFiles = JSON.parse body
+          msg.send "Log files for: '#{taskId}'"
+          for file in logFiles.files
+            msg.send "Name: '#{file.name}', size: #{file.size}[B]"
+        catch error
+          msg.send "Ran into an error parsing JSON :"
+          msg.send error
+
+  showTaskLog = (msg, logName, taskId, alias, length, offset, grep) ->
+    if not isAliasDefined msg, alias
+      return
+
+    grepParam = if grep != undefined then "&grep=#{grep}" else ""
+    url = "#{_singularityAliases[alias].url}/api/sandbox/#{taskId}"+
+          "/read?path=#{logName}&offset=#{offset}&length=#{length}"+
+          "#{grepParam}"
+
+    robot.http(url)
+      .header('Accept', 'application/json')
+      .get() (err, res, body) ->
+        if err or res.statusCode == 404
+          msg.send "There was an error while making the request:"
+          msg.send error or body
+          return
+
+        try
+          log = JSON.parse body
+          msg.send "Log content for: '#{logName}'"
+          msg.send log.data
+        catch error
+          msg.send "Ran into an error parsing JSON :"
+          msg.send error
+
   robot.brain.on 'loaded', ->
     if robot.brain.data.singularity_aliases?
       _singularityAliases = robot.brain.data.singularity_aliases
@@ -224,6 +278,15 @@ module.exports = (robot) ->
 
   robot.respond /singularity show task updates for (.*) on (.*)/i, (msg) ->
     showTaskUpdates msg, msg.match[1], msg.match[2]
+
+  robot.respond /singularity show log files for task (.*) on (.*)/i, (msg) ->
+    showTaskLogFiles msg, msg.match[1], msg.match[2]
+
+  robot.respond /singularity show log (.*) for task (.*) on (.*) (.*) (.*)/i, (msg) ->
+    showTaskLog msg, msg.match[1], msg.match[2], msg.match[3], msg.match[4], msg.match[5]
+
+  robot.respond /singularity grep log (.*) for task (.*) on (.*) (.*) (.*) (.*)/i, (msg) ->
+    showTaskLog msg, msg.match[1], msg.match[2], msg.match[3], msg.match[4], msg.match[5], msg.match[6]
 
   robot.respond /singularity\?/i, (msg) ->
     showCommands(msg)
