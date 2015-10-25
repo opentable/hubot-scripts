@@ -221,7 +221,8 @@ module.exports = (robot) ->
           logFiles = JSON.parse body
           msg.send "Log files for: '#{taskId}'"
           for file in logFiles.files
-            msg.send "Name: '#{file.name}', size: #{file.size}[B]"
+            time = new Date(file.mtime * 1e3)   # Discovered in singularity UI
+            msg.send "Name: '#{file.name}', size: #{file.size}[B], last modified at #{time}"
         catch error
           msg.send "Ran into an error parsing JSON :"
           msg.send error
@@ -231,8 +232,8 @@ module.exports = (robot) ->
       return
 
     grepParam = if grep != undefined then "&grep=#{grep}" else ""
-    url = "#{_singularityAliases[alias].url}/api/sandbox/#{taskId}"+
-          "/read?path=#{logName}&offset=#{offset}&length=#{length}"+
+    url = "#{_singularityAliases[alias].url}/api/sandbox/#{taskId}" +
+          "/read?path=#{logName}&offset=#{offset}&length=#{length}" +
           "#{grepParam}"
 
     robot.http(url)
